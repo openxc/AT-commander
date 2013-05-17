@@ -1,0 +1,34 @@
+AT Commander
+============
+
+The AT Commander is a C library (with an optional C++ wrapper) for controller an
+embedded module that uses an AT command set.
+
+**Supported Platforms**
+
+* Roving Networks
+    * RN-41
+    * RN-42
+
+## C Example
+
+Assuming you are building on a platform with the Arduino library:
+
+    AtCommanderConfig config;
+    config.write_function = Serial.write;
+    config.read_function = Serial.read;
+    config.delay_function = delay;
+
+    // Set the baud to 115200, if it's not already correct
+    bool baud_set = at_commander_set_baud(&config, 115200);
+
+## C++ API
+
+    AtCommander commander(Serial.write, Serial.read, delay);
+    commander.setBaud(115200);
+
+## License
+
+Copyright (c) 2013 Ford Motor Company
+
+Licensed under the BSD license.
