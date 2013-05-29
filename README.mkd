@@ -25,6 +25,8 @@ Assuming you are building on a platform with the Arduino library:
 
 ## C++ API
 
+TODO, might look like this:
+
     AtCommander commander(AT_PLATFORM_RN42, Serial.write, Serial.read, delay);
     commander.setBaud(115200);
 
