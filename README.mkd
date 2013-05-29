@@ -15,6 +15,7 @@ embedded module that uses an AT command set.
 Assuming you are building on a platform with the Arduino library:
 
     AtCommanderConfig config;
+    config.platform = AT_PLATFORM_RN42;
     config.write_function = Serial.write;
     config.read_function = Serial.read;
     config.delay_function = delay;
@@ -24,7 +25,7 @@ Assuming you are building on a platform with the Arduino library:
 
 ## C++ API
 
-    AtCommander commander(Serial.write, Serial.read, delay);
+    AtCommander commander(AT_PLATFORM_RN42, Serial.write, Serial.read, delay);
     commander.setBaud(115200);
 
 ## License
