@@ -15,8 +15,9 @@
 /** Private: Send an array of bytes to the AT device.
  */
 void write(AtCommanderConfig* config, const char* bytes, int size) {
+    int i;
     if(config->write_function != NULL) {
-        for(int i = 0; i < size; i++) {
+        for(i = 0; i < size; i++) {
             config->write_function(bytes[i]);
         }
     }
@@ -25,7 +26,7 @@ void write(AtCommanderConfig* config, const char* bytes, int size) {
 /** Private: If a delay function is available, delay the given time, otherwise
  * just continue.
  */
-void delay(AtCommanderConfig* config, int ms) {
+void delay_ms(AtCommanderConfig* config, int ms) {
     if(config->delay_function != NULL) {
         config->delay_function(ms);
     }
@@ -45,7 +46,7 @@ int read(AtCommanderConfig* config, char* buffer, int size,
     while(bytes_read < size && retries < max_retries) {
         int byte = config->read_function();
         if(byte == -1) {
-            delay(config, RETRY_DELAY_MS);
+            delay_ms(config, RETRY_DELAY_MS);
             retries++;
         } else {
             buffer[bytes_read++] = byte;
@@ -96,14 +97,15 @@ bool initialize_baud(AtCommanderConfig* config, int baud) {
 }
 
 bool at_commander_enter_command_mode(AtCommanderConfig* config) {
+    int baud_index;
     if(!config->connected) {
-        for(int baud_index = 0; baud_index < sizeof(VALID_BAUD_RATES) /
+        for(baud_index = 0; baud_index < sizeof(VALID_BAUD_RATES) /
                 sizeof(int); baud_index++) {
             initialize_baud(config, VALID_BAUD_RATES[baud_index]);
             debug(config, "Attempting to enter command mode");
 
             write(config, "$$$", 3);
-            delay(config, 100);
+            delay_ms(config, 100);
             char response[3];
             int bytes_read = read(config, response, 3, 3);
             if(check_response(config, response, bytes_read, "CMD", 3)) {
@@ -128,7 +130,7 @@ bool at_commander_exit_command_mode(AtCommanderConfig* config) {
     if(config->connected) {
         write(config, "---", 3);
 
-        delay(config, 100);
+        delay_ms(config, 100);
         char response[3];
         int bytes_read = read(config, response, 3, 3);
         if(check_response(config, response, bytes_read, "END", 3)) {
@@ -156,7 +158,7 @@ bool at_commander_set_baud(AtCommanderConfig* config, int baud) {
         sprintf(command, "SU,%d\r\n", baud);
         write(config, command, strnlen(command, 11));
 
-        delay(config, 100);
+        delay_ms(config, 100);
         char response[3];
         int bytes_read = read(config, response, 3, 3);
         if(check_response(config, response, bytes_read, "AOK", 3)) {

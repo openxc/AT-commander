@@ -5,6 +5,7 @@ LDLIBS = -lcheck
 
 TEST_DIR = tests
 
+CFLAGS = -Iatcommander
 
 # Guard against \r\n line endings only in Cygwin
 OSTYPE := $(shell uname)
@@ -15,7 +16,7 @@ ifneq ($(OSTYPE),Darwin)
 	endif
 endif
 
-SRC = $(wildcard *.c)
+SRC = $(wildcard atcommander/*.c)
 OBJS = $(SRC:.c=.o)
 TEST_SRC = $(wildcard $(TEST_DIR)/*.c)
 TEST_OBJS = $(TEST_SRC:.c=.o)
@@ -29,7 +30,7 @@ test: $(TEST_DIR)/tests.bin
 
 $(TEST_DIR)/tests.bin: $(TEST_OBJS) $(OBJS)
 	@mkdir -p $(dir $@)
-	$(CC) $(LDFLAGS) $(CC_SYMBOLS) $(C_FLAGS) $(INCLUDE_PATHS) -o $@ $^ $(LDLIBS)
+	$(CC) $(LDFLAGS) $(CC_SYMBOLS) $(CFLAGS) $(INCLUDE_PATHS) -o $@ $^ $(LDLIBS)
 
 clean:
 	rm -rf *.o $(TEST_DIR)/*.o $(TEST_DIR)/*.bin
