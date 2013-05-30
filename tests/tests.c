@@ -59,6 +59,18 @@ START_TEST (test_enter_command_mode_success)
 }
 END_TEST
 
+START_TEST (test_enter_command_mode_at_baud)
+{
+    char* response = "BADBADCMD";
+    read_message = response;
+    read_message_length = 9;
+
+    ck_assert(!config.connected);
+    at_commander_enter_command_mode(&config);
+    ck_assert(config.connected);
+}
+END_TEST
+
 START_TEST (test_enter_command_mode_fail_bad_response)
 {
     char* success_message = "BAD";
@@ -89,6 +101,7 @@ Suite* suite(void) {
     tcase_add_test(tc_command_mode, test_enter_command_mode_success);
     tcase_add_test(tc_command_mode, test_enter_command_mode_fail_bad_response);
     tcase_add_test(tc_command_mode, test_enter_command_mode_fail_no_response);
+    tcase_add_test(tc_command_mode, test_enter_command_mode_at_baud);
     suite_add_tcase(s, tc_command_mode);
     return s;
 }

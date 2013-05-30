@@ -57,6 +57,7 @@ bool initialize_baud(AtCommanderConfig* config, int baud) {
     if(config->baud_rate_initializer != NULL) {
         debug(config, "Initializing at baud %d", baud);
         config->baud_rate_initializer(baud);
+        config->baud = baud;
         return true;
     }
     debug(config, "No baud rate initializer set, can't change baud - trying anyway");
