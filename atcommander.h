@@ -19,6 +19,7 @@ typedef struct {
     AtCommanderPlatform platform;
     bool connected;
     int baud;
+    int device_baud;
     void (*baud_rate_initializer)(int);
     void (*write_function)(uint8_t);
     int (*read_function)();

@@ -35,6 +35,7 @@ void setup() {
     config.platform = AT_PLATFORM_RN42;
     config.connected = false;
     config.baud = 9600;
+    config.device_baud = 9600;
     config.baud_rate_initializer = baud_rate_initializer;
     config.write_function = mock_write;
     config.read_function = mock_read;
@@ -49,8 +50,8 @@ void setup() {
 
 START_TEST (test_enter_command_mode_success)
 {
-    char* success_message = "CMD";
-    read_message = success_message;
+    char* response = "CMD";
+    read_message = response;
     read_message_length = 3;
 
     ck_assert(!config.connected);
@@ -73,8 +74,8 @@ END_TEST
 
 START_TEST (test_enter_command_mode_fail_bad_response)
 {
-    char* success_message = "BAD";
-    read_message = success_message;
+    char* response = "BAD";
+    read_message = response;
     read_message_length = 3;
 
     ck_assert(!config.connected);
@@ -96,8 +97,8 @@ END_TEST
 
 START_TEST (test_exit_command_mode_success)
 {
-    char* success_message = "END";
-    read_message = success_message;
+    char* response = "END";
+    read_message = response;
     read_message_length = 3;
 
     config.connected = true;
@@ -140,6 +141,47 @@ START_TEST (test_exit_command_mode_already_done)
 }
 END_TEST
 
+START_TEST (test_set_baud_success)
+{
+    char* response = "CMDAOK";
+    read_message = response;
+    read_message_length = 6;
+
+    ck_assert(!config.connected);
+    at_commander_set_baud(&config, 115200);
+    ck_assert(config.connected);
+    ck_assert_int_eq(config.device_baud, 115200);
+}
+END_TEST
+
+START_TEST (test_set_baud_bad_response)
+{
+    char* response = "CMD?";
+    read_message = response;
+    read_message_length = 4;
+
+    ck_assert(!config.connected);
+    ck_assert_int_ne(config.device_baud, 115200);
+    at_commander_set_baud(&config, 115200);
+    ck_assert(config.connected);
+    ck_assert_int_ne(config.device_baud, 115200);
+}
+END_TEST
+
+START_TEST (test_set_baud_no_response)
+{
+    char* response = "CMD";
+    read_message = response;
+    read_message_length = 3;
+
+    ck_assert(!config.connected);
+    ck_assert_int_ne(config.device_baud, 115200);
+    at_commander_set_baud(&config, 115200);
+    ck_assert(config.connected);
+    ck_assert_int_ne(config.device_baud, 115200);
+}
+END_TEST
+
 Suite* suite(void) {
     Suite* s = suite_create("atcommander");
     TCase *tc_enter_command_mode = tcase_create("enter_command_mode");
@@ -157,6 +199,13 @@ Suite* suite(void) {
     tcase_add_test(tc_exit_command_mode, test_exit_command_mode_fail_no_response);
     tcase_add_test(tc_exit_command_mode, test_exit_command_mode_already_done);
     suite_add_tcase(s, tc_exit_command_mode);
+
+    TCase *tc_set_baud = tcase_create("set_baud");
+    tcase_add_checked_fixture(tc_set_baud, setup, NULL);
+    tcase_add_test(tc_set_baud, test_set_baud_success);
+    tcase_add_test(tc_set_baud, test_set_baud_bad_response);
+    tcase_add_test(tc_set_baud, test_set_baud_no_response);
+    suite_add_tcase(s, tc_set_baud);
     return s;
 }
 

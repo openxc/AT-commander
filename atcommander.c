@@ -114,6 +114,7 @@ bool at_commander_enter_command_mode(AtCommanderConfig* config) {
 bool at_commander_exit_command_mode(AtCommanderConfig* config) {
     if(config->connected) {
         write(config, "---", 3);
+
         delay(config, 100);
         char response[3];
         int bytes_read = read(config, response, 3, 3);
@@ -141,6 +142,16 @@ bool at_commander_set_baud(AtCommanderConfig* config, int baud) {
         char command[5];
         sprintf(command, "SU,%d\r\n", baud);
         write(config, command, strnlen(command, 11));
+
+        delay(config, 100);
+        char response[3];
+        int bytes_read = read(config, response, 3, 3);
+        if(check_response(config, response, bytes_read, "AOK", 3)) {
+            debug(config, "Changed device baud rate to %d", baud);
+            config->device_baud = baud;
+        } else {
+            debug(config, "Unable to change device baud rate");
+        }
     } else {
         debug(config, "Unable to enter command mode, can't set baud rate");
     }
