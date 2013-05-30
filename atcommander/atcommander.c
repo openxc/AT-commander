@@ -4,8 +4,10 @@
 #include <string.h>
 #include <stdio.h>
 
-#define RETRY_DELAY_MS 100
-#define RESPONSE_DELAY_MS 500
+#define RETRY_DELAY_MS 50
+#define RESPONSE_DELAY_MS 100
+#define MAX_RESPONSE_LENGTH 8
+#define MAX_RETRIES 3
 
 #define debug(config, ...) \
     if(config->log_function != NULL) { \
@@ -74,9 +76,27 @@ bool check_response(AtCommanderConfig* config, char* response,
     }
 
     if(response_length > 0) {
-        debug(config, "Invalid command mode request response: %s", response);
+        debug(config, "Expected %s response but got %s", expected, response);
     }
     return false;
+}
+
+/** Private: Send an AT command, read a response, and verify it matches the
+ * expected value.
+ *
+ * Returns true if the response matches the expected.
+ */
+bool command_request(AtCommanderConfig* config, char* command,
+        char* expected_response) {
+    write(config, command, strlen(command));
+    delay_ms(config, RESPONSE_DELAY_MS);
+
+    char response[MAX_RESPONSE_LENGTH];
+    int bytes_read = read(config, response, strlen(expected_response),
+            MAX_RETRIES);
+
+    return check_response(config, response, bytes_read, expected_response,
+            strlen(expected_response));
 }
 
 /** Private: Change the baud rate of the UART interface and update the config
@@ -105,11 +125,7 @@ bool at_commander_enter_command_mode(AtCommanderConfig* config) {
             initialize_baud(config, VALID_BAUD_RATES[baud_index]);
             debug(config, "Attempting to enter command mode");
 
-            write(config, "$$$", 3);
-            delay_ms(config, RESPONSE_DELAY_MS);
-            char response[3];
-            int bytes_read = read(config, response, 3, 3);
-            if(check_response(config, response, bytes_read, "CMD", 3)) {
+            if(command_request(config, "$$$", "CMD\r\n")) {
                 config->connected = true;
                 break;
             }
@@ -129,12 +145,7 @@ bool at_commander_enter_command_mode(AtCommanderConfig* config) {
 
 bool at_commander_exit_command_mode(AtCommanderConfig* config) {
     if(config->connected) {
-        write(config, "---", 3);
-
-        delay_ms(config, RESPONSE_DELAY_MS);
-        char response[3];
-        int bytes_read = read(config, response, 3, 3);
-        if(check_response(config, response, bytes_read, "END", 3)) {
+        if(command_request(config, "---", "END\r\n")) {
             debug(config, "Switched back to data mode");
             config->connected = false;
         } else {
@@ -148,6 +159,7 @@ bool at_commander_exit_command_mode(AtCommanderConfig* config) {
 bool at_commander_reboot(AtCommanderConfig* config) {
     if(at_commander_enter_command_mode(config)) {
         write(config, "R,1\r\n", 5);
+        debug(config, "Rebooting RN-42");
     } else {
         debug(config, "Unable to enter command mode, can't reboot");
     }
@@ -157,12 +169,7 @@ bool at_commander_set_baud(AtCommanderConfig* config, int baud) {
     if(at_commander_enter_command_mode(config)) {
         char command[5];
         sprintf(command, "SU,%d\r\n", baud);
-        write(config, command, strnlen(command, 11));
-
-        delay_ms(config, RESPONSE_DELAY_MS);
-        char response[3];
-        int bytes_read = read(config, response, 3, 3);
-        if(check_response(config, response, bytes_read, "AOK", 3)) {
+        if(command_request(config, command, "AOK\r\n")) {
             debug(config, "Changed device baud rate to %d", baud);
             config->device_baud = baud;
             return true;
