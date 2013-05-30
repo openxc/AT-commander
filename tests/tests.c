@@ -94,15 +94,69 @@ START_TEST (test_enter_command_mode_fail_no_response)
 }
 END_TEST
 
+START_TEST (test_exit_command_mode_success)
+{
+    char* success_message = "END";
+    read_message = success_message;
+    read_message_length = 3;
+
+    config.connected = true;
+    at_commander_exit_command_mode(&config);
+    ck_assert(!config.connected);
+}
+END_TEST
+
+START_TEST (test_exit_command_mode_fail_bad_response)
+{
+    char* response = "CMD";
+    read_message = response;
+    read_message_length = 3;
+
+    config.connected = true;
+    at_commander_exit_command_mode(&config);
+    ck_assert(config.connected);
+}
+END_TEST
+
+START_TEST (test_exit_command_mode_fail_no_response)
+{
+    read_message = NULL;
+    read_message_length = 0;
+
+    config.connected = true;
+    at_commander_exit_command_mode(&config);
+    ck_assert(config.connected);
+}
+END_TEST
+
+START_TEST (test_exit_command_mode_already_done)
+{
+    read_message = NULL;
+    read_message_length = 0;
+
+    ck_assert(!config.connected);
+    at_commander_exit_command_mode(&config);
+    ck_assert(!config.connected);
+}
+END_TEST
+
 Suite* suite(void) {
     Suite* s = suite_create("atcommander");
-    TCase *tc_command_mode = tcase_create("command_mode");
-    tcase_add_checked_fixture(tc_command_mode, setup, NULL);
-    tcase_add_test(tc_command_mode, test_enter_command_mode_success);
-    tcase_add_test(tc_command_mode, test_enter_command_mode_fail_bad_response);
-    tcase_add_test(tc_command_mode, test_enter_command_mode_fail_no_response);
-    tcase_add_test(tc_command_mode, test_enter_command_mode_at_baud);
-    suite_add_tcase(s, tc_command_mode);
+    TCase *tc_enter_command_mode = tcase_create("enter_command_mode");
+    tcase_add_checked_fixture(tc_enter_command_mode, setup, NULL);
+    tcase_add_test(tc_enter_command_mode, test_enter_command_mode_success);
+    tcase_add_test(tc_enter_command_mode, test_enter_command_mode_fail_bad_response);
+    tcase_add_test(tc_enter_command_mode, test_enter_command_mode_fail_no_response);
+    tcase_add_test(tc_enter_command_mode, test_enter_command_mode_at_baud);
+    suite_add_tcase(s, tc_enter_command_mode);
+
+    TCase *tc_exit_command_mode = tcase_create("exit_command_mode");
+    tcase_add_checked_fixture(tc_exit_command_mode, setup, NULL);
+    tcase_add_test(tc_exit_command_mode, test_exit_command_mode_success);
+    tcase_add_test(tc_exit_command_mode, test_exit_command_mode_fail_bad_response);
+    tcase_add_test(tc_exit_command_mode, test_exit_command_mode_fail_no_response);
+    tcase_add_test(tc_exit_command_mode, test_exit_command_mode_already_done);
+    suite_add_tcase(s, tc_exit_command_mode);
     return s;
 }
 

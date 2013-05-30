@@ -47,6 +47,24 @@ int read(AtCommanderConfig* config, char* buffer, int size,
     return bytes_read;
 }
 
+bool check_response(AtCommanderConfig* config, char* response,
+        int response_length, char* expected, int expected_length) {
+    if(response_length == 3 && !strncmp(response, expected, expected_length)) {
+        return true;
+    }
+
+    if(response_length != 3) {
+        debug(config, "Expected %d bytes in response but received %d", 3,
+                response_length);
+    }
+
+    if(response_length > 0) {
+        debug(config, "Invalid command mode request response: %s", response);
+    }
+    return false;
+}
+
+
 void delay(AtCommanderConfig* config, int ms) {
     if(config->delay_function != NULL) {
         config->delay_function(ms);
@@ -75,18 +93,9 @@ bool at_commander_enter_command_mode(AtCommanderConfig* config) {
             delay(config, 100);
             char response[3];
             int bytes_read = read(config, response, 3, 3);
-            if(bytes_read == 3 && !strcmp(response, "CMD")) {
+            if(check_response(config, response, bytes_read, "CMD", 3)) {
                 config->connected = true;
                 break;
-            } else {
-                if(bytes_read != 3) {
-                    debug(config, "Expected %d bytes in response but only received %d", 3, bytes_read);
-                }
-
-                if(bytes_read > 0) {
-                    debug(config, "Invalid command mode request response: %s", response);
-                }
-                config->connected = false;
             }
         }
 
@@ -105,6 +114,15 @@ bool at_commander_enter_command_mode(AtCommanderConfig* config) {
 bool at_commander_exit_command_mode(AtCommanderConfig* config) {
     if(config->connected) {
         write(config, "---", 3);
+        delay(config, 100);
+        char response[3];
+        int bytes_read = read(config, response, 3, 3);
+        if(check_response(config, response, bytes_read, "END", 3)) {
+            debug(config, "Switched back to data mode");
+            config->connected = false;
+        } else {
+            debug(config, "Unable to exit command mode");
+        }
     } else {
         debug(config, "Not in command mode");
     }
