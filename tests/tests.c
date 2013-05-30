@@ -4,16 +4,88 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-START_TEST (test_test)
+AtCommanderConfig config;
+
+void debug(const char* message) {
+    printf(message);
+}
+
+void baud_rate_initializer(int baud) {
+}
+
+void mock_write(uint8_t byte) {
+}
+
+static char* read_message;
+static int read_message_length;
+static int read_index;
+
+uint8_t mock_read() {
+    if(read_message != NULL && read_index < read_message_length) {
+        return read_message[read_index++];
+    }
+    return -1;
+}
+
+void setup() {
+    config.platform = AT_PLATFORM_RN42;
+    config.connected = false;
+    config.current_baud_rate = 9600;
+    config.baud_rate_initializer = baud_rate_initializer;
+    config.write_function = mock_write;
+    config.read_function = mock_read;
+    config.delay_function = NULL;
+    config.log_function = debug;
+
+    read_message = NULL;
+    read_message_length = 0;
+    read_index = 0;
+}
+
+
+START_TEST (test_enter_command_mode_success)
 {
+    char* success_message = "CMD";
+    read_message = success_message;
+    read_message_length = 3;
+
+    ck_assert(!config.connected);
+    at_commander_enter_command_mode(&config);
+    ck_assert(config.connected);
+}
+END_TEST
+
+START_TEST (test_enter_command_mode_fail_bad_response)
+{
+    char* success_message = "BAD";
+    read_message = success_message;
+    read_message_length = 3;
+
+    ck_assert(!config.connected);
+    at_commander_enter_command_mode(&config);
+    ck_assert(!config.connected);
+}
+END_TEST
+
+START_TEST (test_enter_command_mode_fail_no_response)
+{
+    read_message = NULL;
+    read_message_length = 0;
+
+    ck_assert(!config.connected);
+    at_commander_enter_command_mode(&config);
+    ck_assert(!config.connected);
 }
 END_TEST
 
 Suite* suite(void) {
-    Suite* s = suite_create("queue");
-    TCase *tc_core = tcase_create("core");
-    tcase_add_test(tc_core, test_test);
-    suite_add_tcase(s, tc_core);
+    Suite* s = suite_create("atcommander");
+    TCase *tc_command_mode = tcase_create("command_mode");
+    tcase_add_checked_fixture(tc_command_mode, setup, NULL);
+    tcase_add_test(tc_command_mode, test_enter_command_mode_success);
+    tcase_add_test(tc_command_mode, test_enter_command_mode_fail_bad_response);
+    tcase_add_test(tc_command_mode, test_enter_command_mode_fail_no_response);
+    suite_add_tcase(s, tc_command_mode);
     return s;
 }
 

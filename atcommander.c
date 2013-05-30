@@ -9,6 +9,7 @@
 void debug(AtCommanderConfig* config, const char* message) {
     if(config->log_function != NULL) {
         config->log_function(message);
+        config->log_function("\r\n");
     }
 }
 
@@ -52,7 +53,9 @@ void delay(AtCommanderConfig* config, int ms) {
 
 bool at_commander_enter_command_mode(AtCommanderConfig* config) {
     if(!config->connected) {
-        for(int i = STARTING_BAUD_RATE; i < MAX_BAUD_RATE_MULTIPLIER; i *= 2) {
+        for(int i = STARTING_BAUD_RATE;
+                i < STARTING_BAUD_RATE * MAX_BAUD_RATE_MULTIPLIER; i *= 2) {
+            debug(config, "Attempting to enter command mode");
             write(config, "$$$", 3);
             delay(config, 100);
             char response[3];
