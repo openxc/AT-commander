@@ -8,8 +8,8 @@
 extern "C" {
 #endif
 
-int STARTING_BAUD_RATE = 9600;
-int MAX_BAUD_RATE_MULTIPLIER = 7;
+static const int STARTING_BAUD_RATE = 9600;
+static const int MAX_BAUD_RATE_MULTIPLIER = 7;
 
 typedef enum {
     AT_PLATFORM_RN42,

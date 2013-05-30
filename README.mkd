@@ -30,6 +30,12 @@ TODO, might look like this:
     AtCommander commander(AT_PLATFORM_RN42, Serial.write, Serial.read, delay);
     commander.setBaud(115200);
 
+## Testing
+
+The library includes a test suite that uses the `check` C unit test library.
+
+    $ make test
+
 ## License
 
 Copyright (c) 2013 Ford Motor Company
