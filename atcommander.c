@@ -22,6 +22,15 @@ void write(AtCommanderConfig* config, const char* bytes, int size) {
     }
 }
 
+/** Private: If a delay function is available, delay the given time, otherwise
+ * just continue.
+ */
+void delay(AtCommanderConfig* config, int ms) {
+    if(config->delay_function != NULL) {
+        config->delay_function(ms);
+    }
+}
+
 /** Private: Read multiple bytes from Serial into the buffer.
  *
  * Continues to try and read each byte from Serial until a maximum number of
@@ -36,9 +45,7 @@ int read(AtCommanderConfig* config, char* buffer, int size,
     while(bytes_read < size && retries < max_retries) {
         int byte = config->read_function();
         if(byte == -1) {
-            if(config->delay_function != NULL) {
-                config->delay_function(RETRY_DELAY_MS);
-            }
+            delay(config, RETRY_DELAY_MS);
             retries++;
         } else {
             buffer[bytes_read++] = byte;
@@ -47,15 +54,21 @@ int read(AtCommanderConfig* config, char* buffer, int size,
     return bytes_read;
 }
 
+/** Private: Compare a response received from a device with some expected
+ *      output.
+ *
+ * Returns true if there reponse matches content and length, otherwise false.
+ */
 bool check_response(AtCommanderConfig* config, char* response,
         int response_length, char* expected, int expected_length) {
-    if(response_length == 3 && !strncmp(response, expected, expected_length)) {
+    if(response_length == expected_length && !strncmp(response, expected,
+                expected_length)) {
         return true;
     }
 
-    if(response_length != 3) {
-        debug(config, "Expected %d bytes in response but received %d", 3,
-                response_length);
+    if(response_length != expected_length) {
+        debug(config, "Expected %d bytes in response but received %d",
+                expected_length, response_length);
     }
 
     if(response_length > 0) {
@@ -64,13 +77,12 @@ bool check_response(AtCommanderConfig* config, char* response,
     return false;
 }
 
-
-void delay(AtCommanderConfig* config, int ms) {
-    if(config->delay_function != NULL) {
-        config->delay_function(ms);
-    }
-}
-
+/** Private: Change the baud rate of the UART interface and update the config
+ * accordingly.
+ *
+ * This function does *not* attempt to change anything on the AT-command set
+ * supporting device, it just changes the host interface.
+ */
 bool initialize_baud(AtCommanderConfig* config, int baud) {
     if(config->baud_rate_initializer != NULL) {
         debug(config, "Initializing at baud %d", baud);
@@ -78,7 +90,8 @@ bool initialize_baud(AtCommanderConfig* config, int baud) {
         config->baud = baud;
         return true;
     }
-    debug(config, "No baud rate initializer set, can't change baud - trying anyway");
+    debug(config, "No baud rate initializer set, can't change baud - "
+            "trying anyway");
     return false;
 }
 
@@ -100,8 +113,8 @@ bool at_commander_enter_command_mode(AtCommanderConfig* config) {
         }
 
         if(config->connected) {
-            debug(config, "Initialized UART and entered command mode at baud %d",
-                    config->baud);
+            debug(config, "Initialized UART and entered command mode at "
+                    "baud %d", config->baud);
         } else {
             debug(config, "Unable to enter command mode at any baud rate");
         }
