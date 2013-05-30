@@ -53,11 +53,23 @@ void delay(AtCommanderConfig* config, int ms) {
     }
 }
 
+bool initialize_baud(AtCommanderConfig* config, int baud) {
+    if(config->baud_rate_initializer != NULL) {
+        debug(config, "Initializing at baud %d", baud);
+        config->baud_rate_initializer(baud);
+        return true;
+    }
+    debug(config, "No baud rate initializer set, can't change baud - trying anyway");
+    return false;
+}
+
 bool at_commander_enter_command_mode(AtCommanderConfig* config) {
     if(!config->connected) {
-        for(int i = STARTING_BAUD_RATE;
-                i < STARTING_BAUD_RATE * MAX_BAUD_RATE_MULTIPLIER; i *= 2) {
+        for(int baud_index = 0; baud_index < sizeof(VALID_BAUD_RATES) /
+                sizeof(int); baud_index++) {
+            initialize_baud(config, VALID_BAUD_RATES[baud_index]);
             debug(config, "Attempting to enter command mode");
+
             write(config, "$$$", 3);
             delay(config, 100);
             char response[3];
@@ -78,7 +90,8 @@ bool at_commander_enter_command_mode(AtCommanderConfig* config) {
         }
 
         if(config->connected) {
-            debug(config, "Initialized UART and entered command mode");
+            debug(config, "Initialized UART and entered command mode at baud %d",
+                    config->baud);
         } else {
             debug(config, "Unable to enter command mode at any baud rate");
         }

@@ -34,7 +34,7 @@ int mock_read() {
 void setup() {
     config.platform = AT_PLATFORM_RN42;
     config.connected = false;
-    config.current_baud_rate = 9600;
+    config.baud = 9600;
     config.baud_rate_initializer = baud_rate_initializer;
     config.write_function = mock_write;
     config.read_function = mock_read;

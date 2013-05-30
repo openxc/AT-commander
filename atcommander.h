@@ -8,8 +8,7 @@
 extern "C" {
 #endif
 
-static const int STARTING_BAUD_RATE = 9600;
-static const int MAX_BAUD_RATE_MULTIPLIER = 7;
+static const int VALID_BAUD_RATES[] = {9600, 19200, 38400, 57600, 115200, 230400, 460800};
 
 typedef enum {
     AT_PLATFORM_RN42,
@@ -19,7 +18,7 @@ typedef enum {
 typedef struct {
     AtCommanderPlatform platform;
     bool connected;
-    int current_baud_rate;
+    int baud;
     void (*baud_rate_initializer)(int);
     void (*write_function)(uint8_t);
     int (*read_function)();
