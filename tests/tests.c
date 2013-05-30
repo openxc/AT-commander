@@ -3,11 +3,15 @@
 #include "atcommander.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 AtCommanderConfig config;
 
-void debug(const char* message) {
-    printf(message);
+void debug(const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    vprintf(format, args);
+    va_end(args);
 }
 
 void baud_rate_initializer(int baud) {
@@ -20,7 +24,7 @@ static char* read_message;
 static int read_message_length;
 static int read_index;
 
-uint8_t mock_read() {
+int mock_read() {
     if(read_message != NULL && read_index < read_message_length) {
         return read_message[read_index++];
     }

@@ -6,12 +6,11 @@
 
 #define RETRY_DELAY_MS 100
 
-void debug(AtCommanderConfig* config, const char* message) {
-    if(config->log_function != NULL) {
-        config->log_function(message);
-        config->log_function("\r\n");
+#define debug(config, ...) \
+    if(config->log_function != NULL) { \
+        config->log_function(__VA_ARGS__); \
+        config->log_function("\r\n"); \
     }
-}
 
 /** Private: Send an array of bytes to the AT device.
  */
@@ -28,21 +27,24 @@ void write(AtCommanderConfig* config, const char* bytes, int size) {
  * Continues to try and read each byte from Serial until a maximum number of
  * retries.
  *
- * Returns true if all bytes were read, otherwise false.
+ * Returns the number of bytes actually read - may be less than size.
  */
-bool read(AtCommanderConfig* config, char* buffer, int size,
+int read(AtCommanderConfig* config, char* buffer, int size,
         int max_retries) {
-    int bytesRead = 0;
+    int bytes_read = 0;
     int retries = 0;
-    while(bytesRead < size && retries < max_retries) {
-        uint8_t byte = config->read_function();
+    while(bytes_read < size && retries < max_retries) {
+        int byte = config->read_function();
         if(byte == -1) {
-            config->delay_function(RETRY_DELAY_MS);
+            if(config->delay_function != NULL) {
+                config->delay_function(RETRY_DELAY_MS);
+            }
             retries++;
         } else {
-            buffer[bytesRead++] = byte;
+            buffer[bytes_read++] = byte;
         }
     }
+    return bytes_read;
 }
 
 void delay(AtCommanderConfig* config, int ms) {
@@ -59,12 +61,18 @@ bool at_commander_enter_command_mode(AtCommanderConfig* config) {
             write(config, "$$$", 3);
             delay(config, 100);
             char response[3];
-            read(config, response, 3, 3);
-            if(!strcmp(response, "CMD")) {
+            int bytes_read = read(config, response, 3, 3);
+            if(bytes_read == 3 && !strcmp(response, "CMD")) {
                 config->connected = true;
                 break;
             } else {
-                debug(config, "Command mode request gave the wrong response");
+                if(bytes_read != 3) {
+                    debug(config, "Expected %d bytes in response but only received %d", 3, bytes_read);
+                }
+
+                if(bytes_read > 0) {
+                    debug(config, "Invalid command mode request response: %s", response);
+                }
                 config->connected = false;
             }
         }

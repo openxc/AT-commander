@@ -22,9 +22,9 @@ typedef struct {
     int current_baud_rate;
     void (*baud_rate_initializer)(int);
     void (*write_function)(uint8_t);
-    uint8_t (*read_function)();
+    int (*read_function)();
     void (*delay_function)(int);
-    void (*log_function)(const char*);
+    void (*log_function)(const char*, ...);
 } AtCommanderConfig;
 
 /** Public: Switch to command mode, returning true if successful.
