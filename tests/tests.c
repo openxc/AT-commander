@@ -55,7 +55,18 @@ START_TEST (test_enter_command_mode_success)
     read_message_length = 3;
 
     ck_assert(!config.connected);
-    at_commander_enter_command_mode(&config);
+    ck_assert(at_commander_enter_command_mode(&config));
+    ck_assert(config.connected);
+}
+END_TEST
+
+START_TEST (test_enter_command_mode_already_active)
+{
+    read_message = NULL;
+    read_message_length = 0;
+
+    config.connected = true;
+    ck_assert(at_commander_enter_command_mode(&config));
     ck_assert(config.connected);
 }
 END_TEST
@@ -67,7 +78,7 @@ START_TEST (test_enter_command_mode_at_baud)
     read_message_length = 9;
 
     ck_assert(!config.connected);
-    at_commander_enter_command_mode(&config);
+    ck_assert(at_commander_enter_command_mode(&config));
     ck_assert(config.connected);
 }
 END_TEST
@@ -79,7 +90,7 @@ START_TEST (test_enter_command_mode_fail_bad_response)
     read_message_length = 3;
 
     ck_assert(!config.connected);
-    at_commander_enter_command_mode(&config);
+    ck_assert(!at_commander_enter_command_mode(&config));
     ck_assert(!config.connected);
 }
 END_TEST
@@ -90,7 +101,7 @@ START_TEST (test_enter_command_mode_fail_no_response)
     read_message_length = 0;
 
     ck_assert(!config.connected);
-    at_commander_enter_command_mode(&config);
+    ck_assert(!at_commander_enter_command_mode(&config));
     ck_assert(!config.connected);
 }
 END_TEST
@@ -148,7 +159,7 @@ START_TEST (test_set_baud_success)
     read_message_length = 6;
 
     ck_assert(!config.connected);
-    at_commander_set_baud(&config, 115200);
+    ck_assert(at_commander_set_baud(&config, 115200));
     ck_assert(config.connected);
     ck_assert_int_eq(config.device_baud, 115200);
 }
@@ -162,7 +173,7 @@ START_TEST (test_set_baud_bad_response)
 
     ck_assert(!config.connected);
     ck_assert_int_ne(config.device_baud, 115200);
-    at_commander_set_baud(&config, 115200);
+    ck_assert(!at_commander_set_baud(&config, 115200));
     ck_assert(config.connected);
     ck_assert_int_ne(config.device_baud, 115200);
 }
@@ -176,7 +187,7 @@ START_TEST (test_set_baud_no_response)
 
     ck_assert(!config.connected);
     ck_assert_int_ne(config.device_baud, 115200);
-    at_commander_set_baud(&config, 115200);
+    ck_assert(!at_commander_set_baud(&config, 115200));
     ck_assert(config.connected);
     ck_assert_int_ne(config.device_baud, 115200);
 }
@@ -187,6 +198,7 @@ Suite* suite(void) {
     TCase *tc_enter_command_mode = tcase_create("enter_command_mode");
     tcase_add_checked_fixture(tc_enter_command_mode, setup, NULL);
     tcase_add_test(tc_enter_command_mode, test_enter_command_mode_success);
+    tcase_add_test(tc_enter_command_mode, test_enter_command_mode_already_active);
     tcase_add_test(tc_enter_command_mode, test_enter_command_mode_fail_bad_response);
     tcase_add_test(tc_enter_command_mode, test_enter_command_mode_fail_no_response);
     tcase_add_test(tc_enter_command_mode, test_enter_command_mode_at_baud);

@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #define RETRY_DELAY_MS 100
+#define RESPONSE_DELAY_MS 500
 
 #define debug(config, ...) \
     if(config->log_function != NULL) { \
@@ -105,7 +106,7 @@ bool at_commander_enter_command_mode(AtCommanderConfig* config) {
             debug(config, "Attempting to enter command mode");
 
             write(config, "$$$", 3);
-            delay_ms(config, 100);
+            delay_ms(config, RESPONSE_DELAY_MS);
             char response[3];
             int bytes_read = read(config, response, 3, 3);
             if(check_response(config, response, bytes_read, "CMD", 3)) {
@@ -130,7 +131,7 @@ bool at_commander_exit_command_mode(AtCommanderConfig* config) {
     if(config->connected) {
         write(config, "---", 3);
 
-        delay_ms(config, 100);
+        delay_ms(config, RESPONSE_DELAY_MS);
         char response[3];
         int bytes_read = read(config, response, 3, 3);
         if(check_response(config, response, bytes_read, "END", 3)) {
@@ -158,16 +159,19 @@ bool at_commander_set_baud(AtCommanderConfig* config, int baud) {
         sprintf(command, "SU,%d\r\n", baud);
         write(config, command, strnlen(command, 11));
 
-        delay_ms(config, 100);
+        delay_ms(config, RESPONSE_DELAY_MS);
         char response[3];
         int bytes_read = read(config, response, 3, 3);
         if(check_response(config, response, bytes_read, "AOK", 3)) {
             debug(config, "Changed device baud rate to %d", baud);
             config->device_baud = baud;
+            return true;
         } else {
             debug(config, "Unable to change device baud rate");
+            return false;
         }
     } else {
         debug(config, "Unable to enter command mode, can't set baud rate");
+        return false;
     }
 }
