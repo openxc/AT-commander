@@ -50,9 +50,9 @@ void setup() {
 
 START_TEST (test_enter_command_mode_success)
 {
-    char* response = "CMD";
+    char* response = "CMD\r\n";
     read_message = response;
-    read_message_length = 3;
+    read_message_length = 5;
 
     ck_assert(!config.connected);
     ck_assert(at_commander_enter_command_mode(&config));
@@ -73,9 +73,9 @@ END_TEST
 
 START_TEST (test_enter_command_mode_at_baud)
 {
-    char* response = "BADBADCMD";
+    char* response = "BADAABADAACMD\r\n";
     read_message = response;
-    read_message_length = 9;
+    read_message_length = 15;
 
     ck_assert(!config.connected);
     ck_assert(at_commander_enter_command_mode(&config));
@@ -85,9 +85,9 @@ END_TEST
 
 START_TEST (test_enter_command_mode_fail_bad_response)
 {
-    char* response = "BAD";
+    char* response = "BAD\r\n";
     read_message = response;
-    read_message_length = 3;
+    read_message_length = 5;
 
     ck_assert(!config.connected);
     ck_assert(!at_commander_enter_command_mode(&config));
@@ -108,9 +108,9 @@ END_TEST
 
 START_TEST (test_exit_command_mode_success)
 {
-    char* response = "END";
+    char* response = "END\r\n";
     read_message = response;
-    read_message_length = 3;
+    read_message_length = 5;
 
     config.connected = true;
     at_commander_exit_command_mode(&config);
@@ -154,9 +154,9 @@ END_TEST
 
 START_TEST (test_set_baud_success)
 {
-    char* response = "CMDAOK";
+    char* response = "CMD\r\nAOK\r\n";
     read_message = response;
-    read_message_length = 6;
+    read_message_length = 10;
 
     ck_assert(!config.connected);
     ck_assert(at_commander_set_baud(&config, 115200));
@@ -167,9 +167,9 @@ END_TEST
 
 START_TEST (test_set_baud_bad_response)
 {
-    char* response = "CMD?";
+    char* response = "CMD\r\n?";
     read_message = response;
-    read_message_length = 4;
+    read_message_length = 6;
 
     ck_assert(!config.connected);
     ck_assert_int_ne(config.device_baud, 115200);
@@ -181,9 +181,9 @@ END_TEST
 
 START_TEST (test_set_baud_no_response)
 {
-    char* response = "CMD";
+    char* response = "CMD\r\n";
     read_message = response;
-    read_message_length = 3;
+    read_message_length = 5;
 
     ck_assert(!config.connected);
     ck_assert_int_ne(config.device_baud, 115200);

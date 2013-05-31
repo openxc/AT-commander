@@ -1,11 +1,10 @@
 CC = g++
-CFLAGS = -I. -c -w -Wall -Werror -g -ggdb
-LDFLAGS = -lm
+INCLUDES = -I. -Iatcommander
+CFLAGS = $(INCLUDES) -c -w -Wall -Werror -g -ggdb
+LDFLAGS =
 LDLIBS = -lcheck
 
 TEST_DIR = tests
-
-CFLAGS = -Iatcommander
 
 # Guard against \r\n line endings only in Cygwin
 OSTYPE := $(shell uname)
@@ -30,7 +29,7 @@ test: $(TEST_DIR)/tests.bin
 
 $(TEST_DIR)/tests.bin: $(TEST_OBJS) $(OBJS)
 	@mkdir -p $(dir $@)
-	$(CC) $(LDFLAGS) $(CC_SYMBOLS) $(CFLAGS) $(INCLUDE_PATHS) -o $@ $^ $(LDLIBS)
+	$(CC) $(LDFLAGS) $(CC_SYMBOLS) $(INCLUDES) -o $@ $^ $(LDLIBS)
 
 clean:
-	rm -rf *.o $(TEST_DIR)/*.o $(TEST_DIR)/*.bin
+	rm -rf atcommander/*.o $(TEST_DIR)/*.o $(TEST_DIR)/*.bin
