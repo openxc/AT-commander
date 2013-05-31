@@ -9,6 +9,8 @@ embedded module that uses an AT command set.
 * Roving Networks
     * RN-41
     * RN-42
+* Digi
+    * XBee
 
 ## C Example
 

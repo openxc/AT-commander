@@ -193,6 +193,19 @@ START_TEST (test_set_baud_no_response)
 }
 END_TEST
 
+START_TEST (test_xbee_enter_command_mode_success)
+{
+    config.platform = AT_PLATFORM_XBEE;
+    char* response = "OK";
+    read_message = response;
+    read_message_length = 2;
+
+    ck_assert(!config.connected);
+    ck_assert(at_commander_enter_command_mode(&config));
+    ck_assert(config.connected);
+}
+END_TEST
+
 Suite* suite(void) {
     Suite* s = suite_create("atcommander");
     TCase *tc_enter_command_mode = tcase_create("enter_command_mode");
@@ -218,6 +231,11 @@ Suite* suite(void) {
     tcase_add_test(tc_set_baud, test_set_baud_bad_response);
     tcase_add_test(tc_set_baud, test_set_baud_no_response);
     suite_add_tcase(s, tc_set_baud);
+
+    TCase *tc_xbee = tcase_create("xbee");
+    tcase_add_checked_fixture(tc_xbee, setup, NULL);
+    tcase_add_test(tc_xbee, test_xbee_enter_command_mode_success);
+    suite_add_tcase(s, tc_xbee);
     return s;
 }
 

@@ -5,7 +5,6 @@
 #include <stdio.h>
 
 #define RETRY_DELAY_MS 50
-#define RESPONSE_DELAY_MS 100
 #define MAX_RESPONSE_LENGTH 8
 #define MAX_RETRIES 3
 
@@ -63,8 +62,8 @@ int read(AtCommanderConfig* config, char* buffer, int size,
  *
  * Returns true if there reponse matches content and length, otherwise false.
  */
-bool check_response(AtCommanderConfig* config, char* response,
-        int response_length, char* expected, int expected_length) {
+bool check_response(AtCommanderConfig* config, const char* response,
+        int response_length, const char* expected, int expected_length) {
     if(response_length == expected_length && !strncmp(response, expected,
                 expected_length)) {
         return true;
@@ -86,10 +85,10 @@ bool check_response(AtCommanderConfig* config, char* response,
  *
  * Returns true if the response matches the expected.
  */
-bool command_request(AtCommanderConfig* config, char* command,
-        char* expected_response) {
+bool command_request(AtCommanderConfig* config, const char* command,
+        const char* expected_response) {
     write(config, command, strlen(command));
-    delay_ms(config, RESPONSE_DELAY_MS);
+    delay_ms(config, config->platform.response_delay_ms);
 
     char response[MAX_RESPONSE_LENGTH];
     int bytes_read = read(config, response, strlen(expected_response),
@@ -125,7 +124,9 @@ bool at_commander_enter_command_mode(AtCommanderConfig* config) {
             initialize_baud(config, VALID_BAUD_RATES[baud_index]);
             debug(config, "Attempting to enter command mode");
 
-            if(command_request(config, "$$$", "CMD\r\n")) {
+            if(command_request(config,
+                    config->platform.enter_command_mode_command.request_format,
+                    config->platform.enter_command_mode_command.expected_response)) {
                 config->connected = true;
                 break;
             }
@@ -145,7 +146,9 @@ bool at_commander_enter_command_mode(AtCommanderConfig* config) {
 
 bool at_commander_exit_command_mode(AtCommanderConfig* config) {
     if(config->connected) {
-        if(command_request(config, "---", "END\r\n")) {
+        if(command_request(config,
+                config->platform.exit_command_mode_command.request_format,
+                config->platform.exit_command_mode_command.expected_response)) {
             debug(config, "Switched back to data mode");
             config->connected = false;
         } else {
@@ -158,20 +161,45 @@ bool at_commander_exit_command_mode(AtCommanderConfig* config) {
 
 bool at_commander_reboot(AtCommanderConfig* config) {
     if(at_commander_enter_command_mode(config)) {
-        write(config, "R,1\r\n", 5);
+        write(config, config->platform.reboot_command.request_format, 5);
         debug(config, "Rebooting RN-42");
     } else {
         debug(config, "Unable to enter command mode, can't reboot");
     }
 }
 
+bool at_commander_store_settings(AtCommanderConfig* config) {
+    if(config->platform.store_settings_command.request_format != NULL
+            && config->platform.store_settings_command.expected_response
+                != NULL) {
+        if(command_request(config,
+                config->platform.store_settings_command.request_format,
+                config->platform.store_settings_command.expected_response)) {
+            debug(config, "Stored settings into flash memory");
+            return true;
+        }
+
+        debug(config, "Unable to store settings in flash memory");
+        return false;
+    }
+    return false;
+}
+
 bool at_commander_set_baud(AtCommanderConfig* config, int baud) {
     if(at_commander_enter_command_mode(config)) {
         char command[5];
-        sprintf(command, "SU,%d\r\n", baud);
-        if(command_request(config, command, "AOK\r\n")) {
+        int (*baud_rate_mapper)(int) = config->platform.baud_rate_mapper;
+        if(baud_rate_mapper == NULL) {
+            baud_rate_mapper = passthrough_baud_rate_mapper;
+        }
+
+        sprintf(command, config->platform.set_baud_rate_command.request_format,
+                baud_rate_mapper(baud));
+        if(command_request(config, command,
+                config->platform.set_baud_rate_command.expected_response)) {
             debug(config, "Changed device baud rate to %d", baud);
             config->device_baud = baud;
+            at_commander_store_settings(config);
             return true;
         } else {
             debug(config, "Unable to change device baud rate");
@@ -181,4 +209,39 @@ bool at_commander_set_baud(AtCommanderConfig* config, int baud) {
         debug(config, "Unable to enter command mode, can't set baud rate");
         return false;
     }
+}
+
+int passthrough_baud_rate_mapper(int baud) {
+    return baud;
+}
+
+int xbee_baud_rate_mapper(int baud) {
+    int value;
+    switch(baud) {
+        case 1200:
+            value = 0;
+            break;
+        case 2300:
+            value = 1;
+            break;
+        case 4800:
+            value = 2;
+            break;
+        case 9600:
+            value = 3;
+            break;
+        case 19200:
+            value = 4;
+            break;
+        case 38400:
+            value = 5;
+            break;
+        case 57600:
+            value = 6;
+            break;
+        case 115200:
+            value = 7;
+            break;
+    }
+    return value;
 }
