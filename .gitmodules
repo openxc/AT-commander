@@ -4,3 +4,6 @@
 [submodule "lpc17xx/BSP"]
 	path = lpc17xx/BSP
 	url = https://github.com/openxc/nxp-bsp
+[submodule "lpc17xx/emqueue"]
+	path = lpc17xx/emqueue
+	url = https://github.com/openxc/emqueue

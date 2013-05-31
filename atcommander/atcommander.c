@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#define RETRY_DELAY_MS 50
+#define RETRY_DELAY_MS 100
 #define MAX_RESPONSE_LENGTH 8
 #define MAX_RETRIES 3
 
@@ -16,12 +16,12 @@
 
 const AtCommanderPlatform AT_PLATFORM_RN42 = {
     DEFAULT_RESPONSE_DELAY_MS,
-    NULL,
+    rn42_baud_rate_mapper,
     { "$$$", "CMD\r\n" },
-    { "---", "END\r\n" },
-    { "SU,%d\r\n", "AOK\r\n" },
+    { "---\r", "END\r\n" },
+    { "SU,%d\r", "AOK\r\n" },
     { NULL, NULL },
-    { "R,1\r\n", NULL },
+    { "R,1\r", NULL },
 };
 
 const AtCommanderPlatform AT_PLATFORM_XBEE = {
@@ -184,7 +184,8 @@ bool at_commander_exit_command_mode(AtCommanderConfig* config) {
 
 bool at_commander_reboot(AtCommanderConfig* config) {
     if(at_commander_enter_command_mode(config)) {
-        write(config, config->platform.reboot_command.request_format, 5);
+        write(config, config->platform.reboot_command.request_format,
+                strlen(config->platform.reboot_command.request_format));
         debug(config, "Rebooting RN-42");
         return true;
     } else {
@@ -212,12 +213,8 @@ bool at_commander_store_settings(AtCommanderConfig* config) {
 
 bool at_commander_set_baud(AtCommanderConfig* config, int baud) {
     if(at_commander_enter_command_mode(config)) {
-        char command[5];
+        char command[6];
         int (*baud_rate_mapper)(int) = config->platform.baud_rate_mapper;
-        if(baud_rate_mapper == NULL) {
-            baud_rate_mapper = passthrough_baud_rate_mapper;
-        }
-
         sprintf(command, config->platform.set_baud_rate_command.request_format,
                 baud_rate_mapper(baud));
         if(command_request(config, command,
@@ -236,8 +233,44 @@ bool at_commander_set_baud(AtCommanderConfig* config, int baud) {
     }
 }
 
-int passthrough_baud_rate_mapper(int baud) {
-    return baud;
+int rn42_baud_rate_mapper(int baud) {
+    int value;
+    switch(baud) {
+        case 1200:
+            value = 12;
+            break;
+        case 2300:
+            value = 23;
+            break;
+        case 4800:
+            value = 48;
+            break;
+        case 9600:
+            value = 96;
+            break;
+        case 19200:
+            value = 19;
+            break;
+        case 38400:
+            value = 28;
+            break;
+        case 57600:
+            value = 57;
+            break;
+        case 115200:
+            value = 11;
+            break;
+        case 230400:
+            value = 23;
+            break;
+        case 460800:
+            value = 46;
+            break;
+        case 921600:
+            value = 92;
+            break;
+    }
+    return value;
 }
 
 int xbee_baud_rate_mapper(int baud) {

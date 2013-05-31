@@ -14,7 +14,8 @@ OPENOCD_CONF_BASE = ../conf/openocd
 TARGET = $(BASE_TARGET)-lpc17xx
 CMSIS_PATH = ./CDL/CMSISv2p00_LPC17xx
 DRIVER_PATH = ./CDL/LPC17xxLib
-INCLUDE_PATHS = -I. -I../atcommander -I$(DRIVER_PATH)/inc -I$(CMSIS_PATH)/inc -IBSP
+INCLUDE_PATHS = -I. -I../atcommander -I$(DRIVER_PATH)/inc -I$(CMSIS_PATH)/inc \
+				-IBSP -Iemqueue
 ifeq ($(BOOTLOADER), 1)
 LINKER_SCRIPT = LPC17xx-bootloader.ld
 else
@@ -38,6 +39,7 @@ OBJCOPY = $(GCC_BIN)arm-none-eabi-objcopy
 LOCAL_C_SRCS = $(wildcard *.c) $(wildcard ../atcommander/*.c)
 LIB_C_SRCS += $(wildcard BSP/*.c)
 LIB_C_SRCS += $(wildcard BSP/LPCXpressoBase_RevB/*.c)
+LIB_C_SRCS += $(wildcard emqueue/*.c)
 LIB_C_SRCS += $(CMSIS_PATH)/src/core_cm3.c
 LIB_C_SRCS += $(CMSIS_PATH)/src/system_LPC17xx.c
 LIB_C_SRCS += $(wildcard $(DRIVER_PATH)/src/*.c)

@@ -4,7 +4,7 @@ AT Commander
 The AT Commander is a C library (with an optional C++ wrapper) for controller an
 embedded module that uses an AT command set.
 
-**Supported Platforms**
+**Supported AT Platforms**
 
 * Roving Networks
     * RN-41
@@ -12,7 +12,15 @@ embedded module that uses an AT command set.
 * Digi
     * XBee
 
-## C Example
+## Firmware
+
+There are examples in this repository for a few platforms that you can flash to
+set the baud rate of an attached RN-42:
+
+* Arduino / chipKIT
+* LPC17xx
+
+## C API Example
 
 Assuming you are building on a platform with the Arduino library:
 
@@ -25,7 +33,7 @@ Assuming you are building on a platform with the Arduino library:
     // Set the baud to 115200, if it's not already correct
     bool baud_set = at_commander_set_baud(&config, 115200);
 
-## C++ API
+## C++ API Example
 
 TODO, might look like this:
 

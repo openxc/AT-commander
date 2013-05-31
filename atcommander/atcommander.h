@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#define DEFAULT_RESPONSE_DELAY_MS 100
+#define DEFAULT_RESPONSE_DELAY_MS 1000
 
 #define AT_PLATFORM_RN41 AT_PLATFORM_RN42
 
@@ -13,7 +13,7 @@
 extern "C" {
 #endif
 
-static const int VALID_BAUD_RATES[] = {9600, 19200, 38400, 57600, 115200, 230400, 460800};
+static const int VALID_BAUD_RATES[] = {115200, 230400, 9600, 19200, 38400, 57600, 460800};
 
 typedef struct {
     const char* request_format;
@@ -59,7 +59,7 @@ bool at_commander_reboot(AtCommanderConfig* config);
  */
 bool at_commander_set_baud(AtCommanderConfig* config, int baud);
 
-int passthrough_baud_rate_mapper(int baud);
+int rn42_baud_rate_mapper(int baud);
 int xbee_baud_rate_mapper(int baud);
 
 #ifdef __cplusplus
