@@ -34,6 +34,7 @@ TODO, might look like this:
 
 The library includes a test suite that uses the `check` C unit test library.
 
+    $ script/bootstrap.sh
     $ make test
 
 ## License
