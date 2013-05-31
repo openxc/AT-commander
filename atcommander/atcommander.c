@@ -14,6 +14,26 @@
         config->log_function("\r\n"); \
     }
 
+const AtCommanderPlatform AT_PLATFORM_RN42 = {
+    DEFAULT_RESPONSE_DELAY_MS,
+    NULL,
+    { "$$$", "CMD\r\n" },
+    { "---", "END\r\n" },
+    { "SU,%d\r\n", "AOK\r\n" },
+    { NULL, NULL },
+    { "R,1\r\n", NULL },
+};
+
+const AtCommanderPlatform AT_PLATFORM_XBEE = {
+    3000,
+    xbee_baud_rate_mapper,
+    { "+++", "OK" },
+    { NULL, NULL },
+    { "ATBD %d\r\n", "OK\r\n" },
+    { "ATWR\r\n", "OK\r\n" },
+    { NULL, NULL },
+};
+
 /** Private: Send an array of bytes to the AT device.
  */
 void write(AtCommanderConfig* config, const char* bytes, int size) {
@@ -151,11 +171,14 @@ bool at_commander_exit_command_mode(AtCommanderConfig* config) {
                 config->platform.exit_command_mode_command.expected_response)) {
             debug(config, "Switched back to data mode");
             config->connected = false;
+            return true;
         } else {
             debug(config, "Unable to exit command mode");
+            return false;
         }
     } else {
         debug(config, "Not in command mode");
+        return true;
     }
 }
 
@@ -163,8 +186,10 @@ bool at_commander_reboot(AtCommanderConfig* config) {
     if(at_commander_enter_command_mode(config)) {
         write(config, config->platform.reboot_command.request_format, 5);
         debug(config, "Rebooting RN-42");
+        return true;
     } else {
         debug(config, "Unable to enter command mode, can't reboot");
+        return false;
     }
 }
 

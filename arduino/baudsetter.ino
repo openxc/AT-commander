@@ -22,7 +22,7 @@ void debug(const char* format, ...) {
     va_list args;
     va_start(args, format);
     char message[512];
-    vsprintf(message, format, args);
+    vsnprintf(message, 512, format, args);
     Serial.print(message);
     va_end(args);
 }

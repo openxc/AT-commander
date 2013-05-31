@@ -5,11 +5,14 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#define DEFAULT_RESPONSE_DELAY_MS 100
+
+#define AT_PLATFORM_RN41 AT_PLATFORM_RN42
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-static const int DEFAULT_RESPONSE_DELAY_MS = 100;
 static const int VALID_BAUD_RATES[] = {9600, 19200, 38400, 57600, 115200, 230400, 460800};
 
 typedef struct {
@@ -18,7 +21,7 @@ typedef struct {
 } AtCommand;
 
 typedef struct {
-    int response_delay_ms;
+    const int response_delay_ms;
     int (*baud_rate_mapper)(int baud);
     AtCommand enter_command_mode_command;
     AtCommand exit_command_mode_command;
@@ -58,28 +61,6 @@ bool at_commander_set_baud(AtCommanderConfig* config, int baud);
 
 int passthrough_baud_rate_mapper(int baud);
 int xbee_baud_rate_mapper(int baud);
-
-const AtCommanderPlatform AT_PLATFORM_RN42 = {
-    DEFAULT_RESPONSE_DELAY_MS,
-    NULL,
-    { "$$$", "CMD\r\n" },
-    { "---", "END\r\n" },
-    { "SU,%d\r\n", "AOK\r\n" },
-    { NULL, NULL },
-    { "R,1\r\n", NULL },
-};
-
-const AtCommanderPlatform AT_PLATFORM_RN41 = AT_PLATFORM_RN42;
-
-const AtCommanderPlatform AT_PLATFORM_XBEE = {
-    3000,
-    xbee_baud_rate_mapper,
-    { "+++", "OK" },
-    { NULL, NULL },
-    { "ATBD %d\r\n", "OK\r\n" },
-    { "ATWR\r\n", "OK\r\n" },
-    { NULL, NULL },
-};
 
 #ifdef __cplusplus
 }

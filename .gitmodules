@@ -1,0 +1,6 @@
+[submodule "lpc17xx/CDL"]
+	path = lpc17xx/CDL
+	url = https://github.com/openxc/nxp-cdl
+[submodule "lpc17xx/BSP"]
+	path = lpc17xx/BSP
+	url = https://github.com/openxc/nxp-bsp
