@@ -22,12 +22,15 @@ set the baud rate of an attached RN-42:
 
 ## C API Example
 
-Assuming you are building on a platform with the Arduino library:
+
+For a full working example on the Arduion platform, see the `arduino` directory.
+
+A brief example:
 
     AtCommanderConfig config;
     config.platform = AT_PLATFORM_RN42;
-    config.write_function = Serial.write;
-    config.read_function = Serial.read;
+    config.write_function = write_byte
+    config.read_function = read_byte
     config.delay_function = delay;
 
     // Set the baud to 115200, if it's not already correct
