@@ -14,7 +14,7 @@
         config->log_function("\r\n"); \
     }
 
-const AtCommanderPlatform AT_PLATFORM_RN42 = {
+AtCommanderPlatform AT_PLATFORM_RN42 = {
     DEFAULT_RESPONSE_DELAY_MS,
     rn42_baud_rate_mapper,
     { "$$$", "CMD\r\n" },
@@ -24,7 +24,7 @@ const AtCommanderPlatform AT_PLATFORM_RN42 = {
     { "R,1\r", NULL },
 };
 
-const AtCommanderPlatform AT_PLATFORM_XBEE = {
+AtCommanderPlatform AT_PLATFORM_XBEE = {
     3000,
     xbee_baud_rate_mapper,
     { "+++", "OK" },

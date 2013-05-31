@@ -5,6 +5,9 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
+extern const AtCommanderPlatform AT_PLATFORM_RN42;
+extern const AtCommanderPlatform AT_PLATFORM_XBEE;
+
 AtCommanderConfig config;
 
 void debug(const char* format, ...) {

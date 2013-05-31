@@ -3,6 +3,8 @@
 #include "WProgram.h"
 #include <stdarg.h>
 
+extern const AtCommanderPlatform AT_PLATFORM_RN42;
+
 bool configured = false;
 AtCommanderConfig config;
 

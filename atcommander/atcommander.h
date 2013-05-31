@@ -21,7 +21,7 @@ typedef struct {
 } AtCommand;
 
 typedef struct {
-    const int response_delay_ms;
+    int response_delay_ms;
     int (*baud_rate_mapper)(int baud);
     AtCommand enter_command_mode_command;
     AtCommand exit_command_mode_command;

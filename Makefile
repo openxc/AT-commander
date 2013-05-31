@@ -1,4 +1,4 @@
-CC = gcc
+CC = g++
 INCLUDES = -I. -Iatcommander
 CFLAGS = $(INCLUDES) -c -w -Wall -Werror -g -ggdb
 LDFLAGS =
