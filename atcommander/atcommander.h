@@ -5,8 +5,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#define DEFAULT_RESPONSE_DELAY_MS 1000
-
 #define AT_PLATFORM_RN41 AT_PLATFORM_RN42
 
 #ifdef __cplusplus
