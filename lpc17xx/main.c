@@ -158,7 +158,6 @@ int main (void) {
         if(!configured) {
             if(at_commander_set_baud(&config, DESIRED_BAUDRATE)) {
                 configured = true;
-                /* at_commander_exit_command_mode(&config); */
                 at_commander_reboot(&config);
             } else {
                 delayMs(1000);
