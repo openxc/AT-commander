@@ -189,10 +189,14 @@ bool at_commander_exit_command_mode(AtCommanderConfig* config) {
 
 bool at_commander_reboot(AtCommanderConfig* config) {
     if(at_commander_enter_command_mode(config)) {
-        at_commander_write(config, config->platform.reboot_command.request_format,
-                strlen(config->platform.reboot_command.request_format));
-        config->connected = false;
-        at_commander_debug(config, "Rebooting RN-42");
+        if(command_request(config,
+                config->platform.reboot_command.request_format,
+                config->platform.reboot_command.expected_response)) {
+            at_commander_debug(config, "Rebooted");
+            config->connected = false;
+        } else {
+            at_commander_debug(config, "Unable to reboot");
+        }
         return true;
     } else {
         at_commander_debug(config, "Unable to enter command mode, can't reboot");
