@@ -40,6 +40,7 @@ AtCommanderPlatform AT_PLATFORM_XBEE = {
 void at_commander_write(AtCommanderConfig* config, const char* bytes, int size) {
     int i;
     if(config->write_function != NULL) {
+        /* at_commander_debug(config, "tx: %s", bytes); */
         for(i = 0; i < size; i++) {
             config->write_function(bytes[i]);
         }
@@ -75,6 +76,9 @@ int at_commander_read(AtCommanderConfig* config, char* buffer, int size,
             buffer[bytes_read++] = byte;
         }
     }
+    /* if(bytes_read > 0) { */
+        /* at_commander_debug(config, "rx: %s", buffer); */
+    /* } */
     return bytes_read;
 }
 
@@ -227,6 +231,8 @@ bool at_commander_set_baud(AtCommanderConfig* config, int baud) {
         int (*baud_rate_mapper)(int) = config->platform.baud_rate_mapper;
         sprintf(command, config->platform.set_baud_rate_command.request_format,
                 baud_rate_mapper(baud));
+        /* at_commander_debug(config, "Mapping baud %d to %d", baud, */
+                /* baud_rate_mapper(baud)); */
         if(command_request(config, command,
                 config->platform.set_baud_rate_command.expected_response)) {
             at_commander_debug(config, "Changed device baud rate to %d", baud);
