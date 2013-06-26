@@ -18,11 +18,11 @@
 AtCommanderPlatform AT_PLATFORM_RN42 = {
     AT_COMMANDER_DEFAULT_RESPONSE_DELAY_MS,
     rn42_baud_rate_mapper,
-    { "$$$", "CMD\r\n" },
-    { "---\r", "END\r\n" },
-    { "SU,%d\r", "AOK\r\n" },
+    { "$$$", "CMD" },
+    { "---\r", "END" },
+    { "SU,%d\r", "AOK" },
     { NULL, NULL },
-    { "R,1\r", NULL },
+    { "R,1\r", "Reboot!" },
 };
 
 AtCommanderPlatform AT_PLATFORM_XBEE = {
@@ -30,8 +30,8 @@ AtCommanderPlatform AT_PLATFORM_XBEE = {
     xbee_baud_rate_mapper,
     { "+++", "OK" },
     { NULL, NULL },
-    { "ATBD %d\r\n", "OK\r\n" },
-    { "ATWR\r\n", "OK\r\n" },
+    { "ATBD %d\r\n", "OK" },
+    { "ATWR\r\n", "OK" },
     { NULL, NULL },
 };
 
@@ -71,7 +71,7 @@ int at_commander_read(AtCommanderConfig* config, char* buffer, int size,
         if(byte == -1) {
             at_commander_delay_ms(config, AT_COMMANDER_RETRY_DELAY_MS);
             retries++;
-        } else {
+        } else if(byte != '\r' && byte != '\n') {
             buffer[bytes_read++] = byte;
         }
     }
