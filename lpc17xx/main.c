@@ -28,7 +28,7 @@
 
 extern const AtCommanderPlatform AT_PLATFORM_RN42;
 
-QUEUE_DECLARE(uint8_t, 8);
+QUEUE_DECLARE(uint8_t, 512);
 QUEUE_DEFINE(uint8_t);
 QUEUE_TYPE(uint8_t) receive_queue;
 
@@ -106,6 +106,12 @@ void writeByte(uint8_t byte) {
 }
 
 void handleReceiveInterrupt() {
+    if(QUEUE_FULL(uint8_t, &receive_queue)) {
+        // TODO why would it fill up?
+        debug("Queue is full");
+        QUEUE_INIT(uint8_t, &receive_queue);
+    }
+
     while(!QUEUE_FULL(uint8_t, &receive_queue)) {
         uint8_t byte;
         uint32_t received = UART_Receive(UART1_DEVICE, &byte, 1, NONE_BLOCKING);
