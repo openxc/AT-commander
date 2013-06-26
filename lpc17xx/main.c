@@ -89,7 +89,7 @@ void configureUart(int baud) {
 
 
     UART_IntConfig(UART1_DEVICE, UART_INTCFG_RBR, ENABLE);
-    UART_IntConfig(UART1_DEVICE, UART_INTCFG_RLS, ENABLE);
+    /* UART_IntConfig(UART1_DEVICE, UART_INTCFG_RLS, ENABLE); */
     /* preemption = 1, sub-priority = 1 */
     NVIC_SetPriority(UART1_IRQn, ((0x01<<3)|0x01));
     NVIC_EnableIRQ(UART1_IRQn);
