@@ -11,7 +11,8 @@
 extern "C" {
 #endif
 
-static const int VALID_BAUD_RATES[] = {115200, 230400, 9600, 19200, 38400, 57600, 460800};
+static const int VALID_BAUD_RATES[] = {230400, 115200, 9600, 19200, 38400,
+    57600, 460800};
 
 typedef struct {
     const char* request_format;
