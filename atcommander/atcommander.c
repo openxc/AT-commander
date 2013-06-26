@@ -191,6 +191,7 @@ bool at_commander_reboot(AtCommanderConfig* config) {
     if(at_commander_enter_command_mode(config)) {
         at_commander_write(config, config->platform.reboot_command.request_format,
                 strlen(config->platform.reboot_command.request_format));
+        config->connected = false;
         at_commander_debug(config, "Rebooting RN-42");
         return true;
     } else {
