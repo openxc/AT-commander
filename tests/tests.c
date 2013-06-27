@@ -17,17 +17,17 @@ void debug(const char* format, ...) {
     va_end(args);
 }
 
-void baud_rate_initializer(int baud) {
+void baud_rate_initializer(void* device, int baud) {
 }
 
-void mock_write(uint8_t byte) {
+void mock_write(void* device, uint8_t byte) {
 }
 
 static char* read_message;
 static int read_message_length;
 static int read_index;
 
-int mock_read() {
+int mock_read(void* device) {
     if(read_message != NULL && read_index < read_message_length) {
         return read_message[read_index++];
     }
