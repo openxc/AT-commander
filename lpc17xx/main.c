@@ -77,7 +77,7 @@ void configurePins() {
     PINSEL_ConfigPin(&PinCfg);
 }
 
-void configureUart(int baud) {
+void configureUart(void* device, int baud) {
     UART_CFG_Type UARTConfigStruct;
     UART_ConfigStructInit(&UARTConfigStruct);
     UARTConfigStruct.Baud_rate = baud;
@@ -100,7 +100,7 @@ void configureUart(int baud) {
     UART_TxCmd(UART1_DEVICE, ENABLE);
 }
 
-void writeByte(uint8_t byte) {
+void writeByte(void* device, uint8_t byte) {
     /* debug("Sending %d\r\n", byte); */
     UART_SendByte(UART1_DEVICE, byte);
 }
@@ -135,7 +135,7 @@ void UART1_IRQHandler() {
     }
 }
 
-int readByte() {
+int readByte(void* device) {
     if(!QUEUE_EMPTY(uint8_t, &receive_queue)) {
         return QUEUE_POP(uint8_t, &receive_queue);
     }

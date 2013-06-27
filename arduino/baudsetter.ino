@@ -8,16 +8,16 @@ extern const AtCommanderPlatform AT_PLATFORM_RN42;
 bool configured = false;
 AtCommanderConfig config;
 
-void write(uint8_t byte) {
-    Serial1.write(byte);
+void write(void* device, uint8_t byte) {
+    ((HardwareSerial*)device)->write(byte);
 }
 
-void begin(int baud) {
-    Serial1.begin(baud);
+void begin(void* device, int baud) {
+    ((HardwareSerial*)device)->begin(baud);
 }
 
-int read() {
-    return Serial1.read();
+int read(void* device) {
+    return ((HardwareSerial*)device)->read();
 }
 
 void debug(const char* format, ...) {
@@ -35,6 +35,7 @@ void setup() {
 
     // Serial 1, pins 18 and 19 on the chipKIT, is where the RN-42 is attached
     config.platform = AT_PLATFORM_RN42;
+    config.device = &Serial1;
     config.baud_rate_initializer = begin;
     config.write_function = write;
     config.read_function = read;
