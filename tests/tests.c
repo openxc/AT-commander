@@ -76,7 +76,7 @@ END_TEST
 
 START_TEST (test_enter_command_mode_at_baud)
 {
-    char* response = "BADAABADAACMD\r\n";
+    char* response = "BADAAABADAAACMD\r\n";
     read_message = response;
     read_message_length = 15;
 
