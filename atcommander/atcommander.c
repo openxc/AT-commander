@@ -50,7 +50,7 @@ void at_commander_write(AtCommanderConfig* config, const char* bytes, int size) 
 /** Private: If a delay function is available, delay the given time, otherwise
  * just continue.
  */
-void at_commander_delay_ms(AtCommanderConfig* config, int ms) {
+void at_commander_delay_ms(AtCommanderConfig* config, unsigned long ms) {
     if(config->delay_function != NULL) {
         config->delay_function(ms);
     }
