@@ -42,7 +42,7 @@ void at_commander_write(AtCommanderConfig* config, const char* bytes, int size) 
     if(config->write_function != NULL) {
         /* at_commander_debug(config, "tx: %s", bytes); */
         for(i = 0; i < size; i++) {
-            config->write_function(bytes[i]);
+            config->write_function(config->device, bytes[i]);
         }
     }
 }
@@ -68,7 +68,7 @@ int at_commander_read(AtCommanderConfig* config, char* buffer, int size,
     int bytes_read = 0;
     int retries = 0;
     while(bytes_read < size && retries < max_retries) {
-        int byte = config->read_function();
+        int byte = config->read_function(config->device);
         if(byte == -1) {
             at_commander_delay_ms(config, AT_COMMANDER_RETRY_DELAY_MS);
             retries++;
@@ -134,7 +134,7 @@ bool command_request(AtCommanderConfig* config, const char* command,
 bool initialize_baud(AtCommanderConfig* config, int baud) {
     if(config->baud_rate_initializer != NULL) {
         at_commander_debug(config, "Initializing at baud %d", baud);
-        config->baud_rate_initializer(baud);
+        config->baud_rate_initializer(config->device, baud);
         config->baud = baud;
         return true;
     }
