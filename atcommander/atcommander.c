@@ -23,6 +23,8 @@ AtCommanderPlatform AT_PLATFORM_RN42 = {
     { "SU,%d\r", "AOK" },
     { NULL, NULL },
     { "R,1\r", "Reboot!" },
+    { "SN,%s\r", "AOK" },
+    { "S-,%s\r", "AOK" },
 };
 
 AtCommanderPlatform AT_PLATFORM_XBEE = {
@@ -32,6 +34,8 @@ AtCommanderPlatform AT_PLATFORM_XBEE = {
     { NULL, NULL },
     { "ATBD %d\r\n", "OK" },
     { "ATWR\r\n", "OK" },
+    { NULL, NULL },
+    { NULL, NULL },
     { NULL, NULL },
 };
 
@@ -101,8 +105,9 @@ bool check_response(AtCommanderConfig* config, const char* response,
     }
 
     if(response_length > 0) {
-        at_commander_debug(config, "Expected %s response but got %s", expected,
-                response);
+        at_commander_debug(config, "Expected \"%s\" (%d bytes) in response "
+                "but got \"%s\" (%d bytes)", expected, expected_length,
+                response, response_length);
     }
     return false;
 }
@@ -246,6 +251,34 @@ bool at_commander_set_baud(AtCommanderConfig* config, int baud) {
     } else {
         at_commander_debug(config,
                 "Unable to enter command mode, can't set baud rate");
+        return false;
+    }
+}
+
+bool at_commander_set_name(AtCommanderConfig* config, const char* name,
+        bool serialized) {
+    if(at_commander_enter_command_mode(config)) {
+        AtCommand* command = &config->platform.set_name_command;
+        if(serialized) {
+            at_commander_debug(config,
+                    "Appending unique serial number to end of name");
+            command = &config->platform.set_serialized_name_command;
+        }
+
+        char request[17];
+        sprintf(request, command->request_format, name);
+
+        if(command_request(config, request, command->expected_response)) {
+            at_commander_debug(config, "Changed device name to %s", name);
+            at_commander_store_settings(config);
+            return true;
+        } else {
+            at_commander_debug(config, "Unable to change device name");
+            return false;
+        }
+    } else {
+        at_commander_debug(config,
+                "Unable to enter command mode, can't set device name");
         return false;
     }
 }

@@ -27,6 +27,8 @@ typedef struct {
     AtCommand set_baud_rate_command;
     AtCommand store_settings_command;
     AtCommand reboot_command;
+    AtCommand set_name_command;
+    AtCommand set_serialized_name_command;
 } AtCommanderPlatform;
 
 typedef struct {
@@ -78,6 +80,17 @@ bool at_commander_reboot(AtCommanderConfig* config);
  *  Returns true if the baud rate was successfully changed.
  */
 bool at_commander_set_baud(AtCommanderConfig* config, int baud);
+
+/** Public: Change the attached AT device's name.
+ *
+ *  name - the desired name.
+ *  serialized - if true, will request the AT device append a unique serial
+ *  number to the end of the name (e.g. the last 2 digits of the MAC address).
+ *
+ *  Returns true if the name was set succesfully.
+ */
+bool at_commander_set_name(AtCommanderConfig* config, const char* name,
+        bool serialized);
 
 int rn42_baud_rate_mapper(int baud);
 int xbee_baud_rate_mapper(int baud);
