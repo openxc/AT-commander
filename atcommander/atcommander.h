@@ -42,12 +42,28 @@ typedef struct {
     void (*log_function)(const char*, ...);
 } AtCommanderConfig;
 
-/** Public: Switch to command mode, returning true if successful.
+/** Public: Switch to command mode.
  *
- * If unable to determine the current baud rate, returns false.
+ * If unable to determine the current baud rate and enter command mode, returns
+ * false.
+ *
+ * Returns true if successful, or if already in command mode.
  */
 bool at_commander_enter_command_mode(AtCommanderConfig* config);
+
+/** Public: Switch to data mode (from command mode).
+ *
+ * Returns true if the device was successfully switched to data mode.
+ */
 bool at_commander_exit_command_mode(AtCommanderConfig* config);
+
+/** Public: Soft-reboot the attached AT device.
+ *
+ * After rebooting, it's good practice to wait a few hundred ms for the device
+ * to restart before trying any other commands.
+ *
+ * Returns true if the device was successfully rebooted.
+ */
 bool at_commander_reboot(AtCommanderConfig* config);
 
 /** Public: Change the UART baud rate of the attached AT device, regardless of
@@ -56,6 +72,10 @@ bool at_commander_reboot(AtCommanderConfig* config);
  *  Attempts to automatically determine the current baud rate in order to enter
  *  command mode and change the baud rate. After updating the baud rate
  *  successfully, it reboots the device.
+ *
+ *      baud - the desired baud rate.
+ *
+ *  Returns true if the baud rate was successfully changed.
  */
 bool at_commander_set_baud(AtCommanderConfig* config, int baud);
 
