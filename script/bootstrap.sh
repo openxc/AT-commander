@@ -45,6 +45,12 @@ die() {
     exit 1
 }
 
+download() {
+    url=$1
+    filename=$2
+    curl $url -L --O $filename
+}
+
 _wait() {
     if [ -z $CI ]; then
         echo "Press Enter when done"
