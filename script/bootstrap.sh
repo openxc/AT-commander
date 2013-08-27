@@ -154,7 +154,7 @@ if [ $OS == "cygwin" ] && ! command -v ld >/dev/null 2>&1; then
 fi
 
 if [ $OS == "mac" ]; then
-    _pushd $DEPENDENCIES_FOLDER
+    pushd $DEPENDENCIES_FOLDER
     LLVM_BASENAME=clang+llvm-3.2-x86_64-apple-darwin11
     LLVM_FILE=$LLVM_BASENAME.tar.gz
     LLVM_URL=http://llvm.org/releases/3.2/$LLVM_FILE
@@ -172,7 +172,7 @@ if [ $OS == "mac" ]; then
         echo "LLVM 3.2 installed"
     fi
 
-    _popd
+    popd
 fi
 
 if ! ld -lcheck -o /tmp/checkcheck 2>/dev/null; then
@@ -199,14 +199,14 @@ if ! command -v arm-none-eabi-gcc >/dev/null 2>&1; then
     GCC_ARM_URL="https://launchpad.net/gcc-arm-embedded/4.7/4.7-2012-q4-major/+download/$GCC_ARM_FILE"
     GCC_ARM_DIR="gcc-arm-embedded"
 
-    _pushd $DEPENDENCIES_FOLDER
+    pushd $DEPENDENCIES_FOLDER
     if ! test -e $GCC_ARM_FILE
     then
         download $GCC_ARM_URL $GCC_ARM_FILE
     fi
 
     mkdir -p $GCC_ARM_DIR
-    _pushd $GCC_ARM_DIR
+    pushd $GCC_ARM_DIR
     if [ $OS == "cygwin" ]; then
         chmod a+x ../$GCC_ARM_FILE
         INSTALL_COMMAND="cygstart.exe ../$GCC_ARM_FILE"
@@ -247,15 +247,15 @@ if ! command -v arm-none-eabi-gcc >/dev/null 2>&1; then
         cp -R "$GCC_INNER_DIR"/* .
     fi
 
-    _popd
-    _popd
+    popd
+    popd
 
 fi
 
 if [ -z $CI ] && ! command -v openocd >/dev/null 2>&1; then
 
     ## Download OpenOCD for flashing ARM via JTAG
-    _pushd $DEPENDENCIES_FOLDER
+    pushd $DEPENDENCIES_FOLDER
 
     echo "Installing OpenOCD..."
     if [ $OS == "linux" ]; then
@@ -270,7 +270,7 @@ if [ -z $CI ] && ! command -v openocd >/dev/null 2>&1; then
         echo
         echo "Missing OpenOCD and it's not trivial to install in Windows - you won't be able to program the ARM platform (not required for the chipKIT translator)"
     fi
-    _popd
+    popd
 fi
 
 FTDI_USB_DRIVER_PLIST=/System/Library/Extensions/FTDIUSBSerialDriver.kext/Contents/Info.plist
