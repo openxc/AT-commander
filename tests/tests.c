@@ -1,12 +1,9 @@
+#include "atcommander.h"
 #include <check.h>
 #include <stdint.h>
-#include "atcommander.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-
-extern const AtCommanderPlatform AT_PLATFORM_RN42;
-extern const AtCommanderPlatform AT_PLATFORM_XBEE;
 
 AtCommanderConfig config;
 
