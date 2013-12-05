@@ -17,6 +17,7 @@ static const int VALID_BAUD_RATES[] = {230400, 115200, 9600, 19200, 38400,
 typedef struct {
     const char* request_format;
     const char* expected_response;
+    const char* error_response;
 } AtCommand;
 
 typedef struct {
@@ -29,6 +30,8 @@ typedef struct {
     AtCommand reboot_command;
     AtCommand set_name_command;
     AtCommand set_serialized_name_command;
+    AtCommand get_name_command;
+    AtCommand get_device_id_command;
 } AtCommanderPlatform;
 
 extern const AtCommanderPlatform AT_PLATFORM_RN42;
@@ -94,6 +97,26 @@ bool at_commander_set_baud(AtCommanderConfig* config, int baud);
  */
 bool at_commander_set_name(AtCommanderConfig* config, const char* name,
         bool serialized);
+
+/** Public: Retrieve the attached AT device's ID (usually MAC).
+ *
+ *  buffer - a string buffer to store the retreived device ID.
+ *  buflen - the length of the buffer.
+ *
+ *  Returns the length of the response, or -1 if an error occurred.
+ */
+int at_commander_get_device_id(AtCommanderConfig* config, char* buffer,
+        int buflen);
+
+/** Public: Retreive the attached AT device's name.
+ *
+ *  buffer - a string buffer to store the retreived name.
+ *  buflen - the length of the buffer.
+ *
+ *  Returns the length of the response, or -1 if an error occurred.
+ */
+int at_commander_get_name(AtCommanderConfig* config, char* buffer,
+        int buflen);
 
 int rn42_baud_rate_mapper(int baud);
 int xbee_baud_rate_mapper(int baud);

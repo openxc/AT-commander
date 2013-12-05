@@ -25,6 +25,8 @@ const AtCommanderPlatform AT_PLATFORM_RN42 = {
     { "R,1\r", "Reboot!" },
     { "SN,%s\r", "AOK" },
     { "S-,%s\r", "AOK" },
+    { "GN\r", NULL, "ERR" },
+    { "GB\r", NULL, "ERR" },
 };
 
 const AtCommanderPlatform AT_PLATFORM_XBEE = {
@@ -34,6 +36,8 @@ const AtCommanderPlatform AT_PLATFORM_XBEE = {
     { NULL, NULL },
     { "ATBD %d\r\n", "OK" },
     { "ATWR\r\n", "OK" },
+    { NULL, NULL },
+    { NULL, NULL },
     { NULL, NULL },
     { NULL, NULL },
     { NULL, NULL },
@@ -71,13 +75,22 @@ int at_commander_read(AtCommanderConfig* config, char* buffer, int size,
         int max_retries) {
     int bytes_read = 0;
     int retries = 0;
-    while(bytes_read < size && retries < max_retries) {
+    bool sawCarraigeReturn = false;
+    while(bytes_read < size && (max_retries == 0 || retries < max_retries)) {
         int byte = config->read_function(config->device);
         if(byte == -1) {
             at_commander_delay_ms(config, AT_COMMANDER_RETRY_DELAY_MS);
             retries++;
         } else if(byte != '\r' && byte != '\n') {
             buffer[bytes_read++] = byte;
+        }
+
+        if(bytes_read > 1) {
+            if(byte == '\r') {
+                sawCarraigeReturn = true;
+            } else if(sawCarraigeReturn && byte == '\n') {
+                break;
+            }
         }
     }
     /* if(bytes_read > 0) { */
@@ -89,7 +102,7 @@ int at_commander_read(AtCommanderConfig* config, char* buffer, int size,
 /** Private: Compare a response received from a device with some expected
  *      output.
  *
- * Returns true if there reponse matches content and length, otherwise false.
+ * Returns true if the reponse matches content and length, otherwise false.
  */
 bool check_response(AtCommanderConfig* config, const char* response,
         int response_length, const char* expected, int expected_length) {
@@ -117,7 +130,7 @@ bool check_response(AtCommanderConfig* config, const char* response,
  *
  * Returns true if the response matches the expected.
  */
-bool command_request(AtCommanderConfig* config, const char* command,
+bool set_request(AtCommanderConfig* config, const char* command,
         const char* expected_response) {
     at_commander_write(config, command, strlen(command));
     at_commander_delay_ms(config, config->platform.response_delay_ms);
@@ -128,6 +141,27 @@ bool command_request(AtCommanderConfig* config, const char* command,
 
     return check_response(config, response, bytes_read, expected_response,
             strlen(expected_response));
+}
+
+/** Private: Send an AT GET query, read a response, and verify it doesn't match
+ * any known errors.
+ *
+ * Returns true if the response isn't a known error state.
+ */
+int get_request(AtCommanderConfig* config, const char* command,
+        const char* error_response, char* response_buffer,
+        int response_buffer_length) {
+    at_commander_write(config, command, strlen(command));
+    at_commander_delay_ms(config, config->platform.response_delay_ms);
+
+    int bytes_read = at_commander_read(config, response_buffer,
+            response_buffer_length - 1, AT_COMMANDER_MAX_RETRIES);
+    response_buffer[bytes_read] = '\0';
+
+    if(strncmp(response_buffer, error_response, strlen(error_response))) {
+        return bytes_read;
+    }
+    return -1;
 }
 
 /** Private: Change the baud rate of the UART interface and update the config
@@ -156,7 +190,7 @@ bool at_commander_enter_command_mode(AtCommanderConfig* config) {
             initialize_baud(config, VALID_BAUD_RATES[baud_index]);
             at_commander_debug(config, "Attempting to enter command mode");
 
-            if(command_request(config,
+            if(set_request(config,
                     config->platform.enter_command_mode_command.request_format,
                     config->platform.
                         enter_command_mode_command.expected_response)) {
@@ -180,7 +214,7 @@ bool at_commander_enter_command_mode(AtCommanderConfig* config) {
 
 bool at_commander_exit_command_mode(AtCommanderConfig* config) {
     if(config->connected) {
-        if(command_request(config,
+        if(set_request(config,
                 config->platform.exit_command_mode_command.request_format,
                 config->platform.exit_command_mode_command.expected_response)) {
             at_commander_debug(config, "Switched back to data mode");
@@ -198,7 +232,7 @@ bool at_commander_exit_command_mode(AtCommanderConfig* config) {
 
 bool at_commander_reboot(AtCommanderConfig* config) {
     if(at_commander_enter_command_mode(config)) {
-        if(command_request(config,
+        if(set_request(config,
                 config->platform.reboot_command.request_format,
                 config->platform.reboot_command.expected_response)) {
             at_commander_debug(config, "Rebooted");
@@ -217,7 +251,7 @@ bool at_commander_store_settings(AtCommanderConfig* config) {
     if(config->platform.store_settings_command.request_format != NULL
             && config->platform.store_settings_command.expected_response
                 != NULL) {
-        if(command_request(config,
+        if(set_request(config,
                 config->platform.store_settings_command.request_format,
                 config->platform.store_settings_command.expected_response)) {
             at_commander_debug(config, "Stored settings into flash memory");
@@ -238,7 +272,7 @@ bool at_commander_set_baud(AtCommanderConfig* config, int baud) {
                 baud_rate_mapper(baud));
         /* at_commander_debug(config, "Mapping baud %d to %d", baud, */
                 /* baud_rate_mapper(baud)); */
-        if(command_request(config, command,
+        if(set_request(config, command,
                 config->platform.set_baud_rate_command.expected_response)) {
             at_commander_debug(config, "Changed device baud rate to %d", baud);
             config->device_baud = baud;
@@ -267,8 +301,7 @@ bool at_commander_set_name(AtCommanderConfig* config, const char* name,
 
         char request[17];
         sprintf(request, command->request_format, name);
-
-        if(command_request(config, request, command->expected_response)) {
+        if(set_request(config, request, command->expected_response)) {
             at_commander_debug(config, "Changed device name to %s", name);
             at_commander_store_settings(config);
             return true;
@@ -280,6 +313,59 @@ bool at_commander_set_name(AtCommanderConfig* config, const char* name,
         at_commander_debug(config,
                 "Unable to enter command mode, can't set device name");
         return false;
+    }
+}
+
+// TODO this is almost identical to at_commander_get_name
+int at_commander_get_device_id(AtCommanderConfig* config, char* buffer,
+        int buflen) {
+    if(buffer == NULL || buflen <= 0) {
+        at_commander_debug(config, "Unable to get device ID, buffer is invalid");
+        return -1;
+    }
+
+    if(at_commander_enter_command_mode(config)) {
+        AtCommand* command = &config->platform.get_device_id_command;
+
+        int bytes_read = get_request(config, command->request_format,
+                command->error_response, buffer, buflen);
+        if(bytes_read > 0) {
+            at_commander_debug(config, "Retreived device ID %s", buffer);
+            return bytes_read;
+        } else {
+            at_commander_debug(config, "Unable to get device ID");
+            return -1;
+        }
+    } else {
+        at_commander_debug(config,
+                "Unable to enter command mode, can't get device ID");
+        return -1;
+    }
+}
+
+int at_commander_get_name(AtCommanderConfig* config, char* buffer,
+        int buflen) {
+    if(buffer == NULL || buflen <= 0) {
+        at_commander_debug(config, "Unable to get name, buffer is invalid");
+        return -1;
+    }
+
+    if(at_commander_enter_command_mode(config)) {
+        AtCommand* command = &config->platform.get_name_command;
+
+        int bytes_read = get_request(config, command->request_format,
+                command->error_response, buffer, buflen);
+        if(bytes_read > 0) {
+            at_commander_debug(config, "Retreived device name %s", buffer);
+            return bytes_read;
+        } else {
+            at_commander_debug(config, "Unable to get device name");
+            return -1;
+        }
+    } else {
+        at_commander_debug(config,
+                "Unable to enter command mode, can't get device name");
+        return -1;
     }
 }
 

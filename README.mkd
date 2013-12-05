@@ -36,6 +36,9 @@ A brief example:
     // Set the baud to 115200, if it's not already correct
     bool baud_set = at_commander_set_baud(&config, 115200);
 
+    char device_id[20];
+    at_commander_get_device_id(&config, device_id, sizeof(device_id));
+
 ## C++ API Example
 
 TODO, might look like this:

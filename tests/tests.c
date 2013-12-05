@@ -206,6 +206,93 @@ START_TEST (test_xbee_enter_command_mode_success)
 }
 END_TEST
 
+START_TEST (test_get_device_id_success)
+{
+    char* response = "CMD\r\n00066646C2AF\r\n";
+    read_message = response;
+    read_message_length = 19;
+
+    char device_id[20];
+    ck_assert(!config.connected);
+    ck_assert_int_eq(at_commander_get_device_id(&config, device_id,
+                sizeof(device_id)), 12);
+    ck_assert(config.connected);
+    ck_assert_str_eq(device_id, "00066646C2AF");
+}
+END_TEST
+
+START_TEST (test_get_device_id_bad_response)
+{
+    char* response = "CMD\r\nERR";
+    read_message = response;
+    read_message_length = 8;
+
+    char device_id[20];
+    ck_assert(!config.connected);
+    ck_assert_int_eq(at_commander_get_device_id(&config, device_id,
+                sizeof(device_id)), -1);
+    ck_assert(config.connected);
+    ck_assert_str_ne(device_id, "00066646C2AF");
+}
+END_TEST
+
+START_TEST (test_get_device_id_no_response)
+{
+    char* response = "CMD\r\n";
+    read_message = response;
+    read_message_length = 5;
+
+    char device_id[20];
+    ck_assert(!config.connected);
+    ck_assert_int_eq(at_commander_get_device_id(&config, device_id,
+                sizeof(device_id)), -1);
+    ck_assert(config.connected);
+    ck_assert_str_ne(device_id, "00066646C2AF");
+}
+END_TEST
+
+START_TEST (test_get_name_success)
+{
+    char* response = "CMD\r\nFOO\r\n";
+    read_message = response;
+    read_message_length = 10;
+
+    char name[20];
+    ck_assert(!config.connected);
+    ck_assert_int_eq(at_commander_get_name(&config, name, sizeof(name)), 3);
+    ck_assert(config.connected);
+    ck_assert_str_eq(name, "FOO");
+}
+END_TEST
+
+START_TEST (test_get_name_bad_response)
+{
+    char* response = "CMD\r\nERR";
+    read_message = response;
+    read_message_length = 8;
+
+    char name[20];
+    ck_assert(!config.connected);
+    ck_assert_int_eq(at_commander_get_name(&config, name, sizeof(name)), -1);
+    ck_assert(config.connected);
+    ck_assert_str_ne(name, "FOO");
+}
+END_TEST
+
+START_TEST (test_get_name_no_response)
+{
+    char* response = "CMD\r\n";
+    read_message = response;
+    read_message_length = 5;
+
+    char name[20];
+    ck_assert(!config.connected);
+    ck_assert_int_eq(at_commander_get_name(&config, name, sizeof(name)), -1);
+    ck_assert(config.connected);
+    ck_assert_str_ne(name, "FOO");
+}
+END_TEST
+
 Suite* suite(void) {
     Suite* s = suite_create("atcommander");
     TCase *tc_enter_command_mode = tcase_create("enter_command_mode");
@@ -231,6 +318,20 @@ Suite* suite(void) {
     tcase_add_test(tc_set_baud, test_set_baud_bad_response);
     tcase_add_test(tc_set_baud, test_set_baud_no_response);
     suite_add_tcase(s, tc_set_baud);
+
+    TCase *tc_get_device_id = tcase_create("get_device_id");
+    tcase_add_checked_fixture(tc_get_device_id, setup, NULL);
+    tcase_add_test(tc_get_device_id, test_get_device_id_success);
+    tcase_add_test(tc_get_device_id, test_get_device_id_bad_response);
+    tcase_add_test(tc_get_device_id, test_get_device_id_no_response);
+    suite_add_tcase(s, tc_get_device_id);
+
+    TCase *tc_get_name = tcase_create("get_name");
+    tcase_add_checked_fixture(tc_get_name, setup, NULL);
+    tcase_add_test(tc_get_name, test_get_name_success);
+    tcase_add_test(tc_get_name, test_get_name_bad_response);
+    tcase_add_test(tc_get_name, test_get_name_no_response);
+    suite_add_tcase(s, tc_get_name);
 
     TCase *tc_xbee = tcase_create("xbee");
     tcase_add_checked_fixture(tc_xbee, setup, NULL);
