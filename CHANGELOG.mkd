@@ -2,7 +2,7 @@
 
 ## v0.2
 
-* Add GET commands to retreive name and unique device ID.
+* Add GET commands to retrieve name and unique device ID.
 
 ## v0.1
 

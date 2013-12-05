@@ -330,7 +330,7 @@ int at_commander_get_device_id(AtCommanderConfig* config, char* buffer,
         int bytes_read = get_request(config, command->request_format,
                 command->error_response, buffer, buflen);
         if(bytes_read > 0) {
-            at_commander_debug(config, "Retreived device ID %s", buffer);
+            at_commander_debug(config, "Retrieved device ID %s", buffer);
             return bytes_read;
         } else {
             at_commander_debug(config, "Unable to get device ID");
@@ -356,7 +356,7 @@ int at_commander_get_name(AtCommanderConfig* config, char* buffer,
         int bytes_read = get_request(config, command->request_format,
                 command->error_response, buffer, buflen);
         if(bytes_read > 0) {
-            at_commander_debug(config, "Retreived device name %s", buffer);
+            at_commander_debug(config, "Retrieved device name %s", buffer);
             return bytes_read;
         } else {
             at_commander_debug(config, "Unable to get device name");

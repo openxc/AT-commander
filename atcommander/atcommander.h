@@ -93,14 +93,14 @@ bool at_commander_set_baud(AtCommanderConfig* config, int baud);
  *  serialized - if true, will request the AT device append a unique serial
  *  number to the end of the name (e.g. the last 2 digits of the MAC address).
  *
- *  Returns true if the name was set succesfully.
+ *  Returns true if the name was set successfully.
  */
 bool at_commander_set_name(AtCommanderConfig* config, const char* name,
         bool serialized);
 
 /** Public: Retrieve the attached AT device's ID (usually MAC).
  *
- *  buffer - a string buffer to store the retreived device ID.
+ *  buffer - a string buffer to store the retrieved device ID.
  *  buflen - the length of the buffer.
  *
  *  Returns the length of the response, or -1 if an error occurred.
@@ -108,9 +108,9 @@ bool at_commander_set_name(AtCommanderConfig* config, const char* name,
 int at_commander_get_device_id(AtCommanderConfig* config, char* buffer,
         int buflen);
 
-/** Public: Retreive the attached AT device's name.
+/** Public: Retrieve the attached AT device's name.
  *
- *  buffer - a string buffer to store the retreived name.
+ *  buffer - a string buffer to store the retrieved name.
  *  buflen - the length of the buffer.
  *
  *  Returns the length of the response, or -1 if an error occurred.
