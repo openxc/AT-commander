@@ -1,0 +1,9 @@
+# AT-Commander Changelog
+
+## v0.2
+
+* Add GET commands to retreive name and unique device ID.
+
+## v0.1
+
+* Initial release

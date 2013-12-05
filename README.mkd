@@ -53,6 +53,10 @@ The library includes a test suite that uses the `check` C unit test library.
     $ script/bootstrap.sh
     $ make test
 
+## Authors
+
+Chris Peplin cpeplin@ford.com
+
 ## License
 
 Copyright (c) 2013 Ford Motor Company
