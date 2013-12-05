@@ -164,6 +164,21 @@ int main (void) {
         if(!configured) {
             if(at_commander_set_baud(&config, DESIRED_BAUDRATE)) {
                 configured = true;
+                char name[20];
+                if(at_commander_get_name(&config, name, sizeof(name)) > 0) {
+                    _printf("Current name of device is %s\r\n", name);
+                } else {
+                    _printf("Unable to get current device name\r\n");
+                }
+
+                char device_id[20];
+                if(at_commander_get_device_id(&config, device_id,
+                            sizeof(device_id)) > 0) {
+                    _printf("Current ID of device is %s\r\n", device_id);
+                } else {
+                    _printf("Unable to get current device ID\r\n");
+                }
+
                 at_commander_set_name(&config, "AT-Commander", true);
                 at_commander_reboot(&config);
             } else {
