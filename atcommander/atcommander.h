@@ -26,6 +26,7 @@ typedef struct {
     AtCommand enter_command_mode_command;
     AtCommand exit_command_mode_command;
     AtCommand set_baud_rate_command;
+    AtCommand set_configuration_timer_command;
     AtCommand store_settings_command;
     AtCommand reboot_command;
     AtCommand set_name_command;
@@ -86,6 +87,19 @@ bool at_commander_reboot(AtCommanderConfig* config);
  *  Returns true if the baud rate was successfully changed.
  */
 bool at_commander_set_baud(AtCommanderConfig* config, int baud);
+
+/** Public: Change the configuration timeout of the attached AT device.
+ *
+ *  Attempts to automatically determine the current baud rate in order to enter
+ *  command mode and change the configuration timer (in seconds). A timeout of 0
+ *  means that remote configuration is not allowed (configuration is always
+ *  allowed via UART).
+ *
+ *      timeout - the desired configuration timeout in seconds.
+ *
+ *  Returns true if the configuration timer was successfully changed.
+ */
+bool at_commander_set_configuration_timer(AtCommanderConfig* config, int timeout_s);
 
 /** Public: Change the attached AT device's name.
  *

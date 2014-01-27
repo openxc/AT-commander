@@ -21,6 +21,7 @@ const AtCommanderPlatform AT_PLATFORM_RN42 = {
     { "$$$", "CMD" },
     { "---\r", "END" },
     { "SU,%d\r", "AOK" },
+    { "ST,%d\r", "AOK" },
     { NULL, NULL },
     { "R,1\r", "Reboot!" },
     { "SN,%s\r", "AOK" },
@@ -262,6 +263,30 @@ bool at_commander_store_settings(AtCommanderConfig* config) {
         return false;
     }
     return false;
+}
+
+bool at_commander_set_configuration_timer(AtCommanderConfig* config,
+        int timeout_s) {
+    if(at_commander_enter_command_mode(config)) {
+        char command[6];
+        sprintf(command,
+                config->platform.set_configuration_timer_command.request_format,
+                timeout_s);
+        if(set_request(config, command,
+                config->platform.set_configuration_timer_command.expected_response)) {
+            at_commander_debug(config, "Changed configuration timer to %d",
+                    timeout_s);
+            at_commander_store_settings(config);
+            return true;
+        } else {
+            at_commander_debug(config, "Unable to change configuration timer");
+            return false;
+        }
+    } else {
+        at_commander_debug(config,
+                "Unable to enter command mode, can't set configuration timer");
+        return false;
+    }
 }
 
 bool at_commander_set_baud(AtCommanderConfig* config, int baud) {
