@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <stdarg.h>
 
 #define AT_PLATFORM_RN41 AT_PLATFORM_RN42
 
@@ -131,6 +132,32 @@ int at_commander_get_device_id(AtCommanderConfig* config, char* buffer,
  */
 int at_commander_get_name(AtCommanderConfig* config, char* buffer,
         int buflen);
+
+/** Public: Retrieve the attached AT device's name.
+ *
+ *  buffer - a string buffer to store the retrieved name.
+ *  buflen - the length of the buffer.
+ *
+ *  Returns the length of the response, or -1 if an error occurred.
+ */
+int at_commander_get_name(AtCommanderConfig* config, char* buffer,
+        int buflen);
+
+/** Public: Send an AT "get" query, read a response, and verify it doesn't match
+ * any known errors.
+ *
+ * Returns true if the response isn't a known error state.
+ */
+int at_commander_get(AtCommanderConfig* config, AtCommand* command,
+        char* response_buffer, int response_buffer_length);
+
+/** Public: Send an AT command, read a response, and verify it matches the
+ * expected value.
+ *
+ * Returns true if the response matches the expected.
+ */
+bool at_commander_set(AtCommanderConfig* config, AtCommand* command,
+        ...);
 
 int rn42_baud_rate_mapper(int baud);
 int xbee_baud_rate_mapper(int baud);

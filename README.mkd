@@ -39,6 +39,26 @@ A brief example:
     char device_id[20];
     at_commander_get_device_id(&config, device_id, sizeof(device_id));
 
+    // Send an arbitrary "get" request:
+    AtCommand my_get_command = {
+        request_format: "GB",
+        expected_response: NULL,
+        error_response: "ERR"
+    };
+
+    char response[25];
+    at_commander_get(config, &my_get_command, response, sizeof(response));
+
+    // Send an arbitrary "set" command, with arguments
+    AtCommand my_set_command = {
+        request_format: "SR,%s",
+        expected_response: "AOK",
+        error_response: "ERR"
+    };
+
+    at_commander_set(config, &my_set_command, "Z");
+
+
 ## C++ API Example
 
 TODO, might look like this:

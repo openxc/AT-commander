@@ -245,7 +245,7 @@ START_TEST (test_get_device_id_no_response)
     char device_id[20];
     ck_assert(!config.connected);
     ck_assert_int_eq(at_commander_get_device_id(&config, device_id,
-                sizeof(device_id)), -1);
+                sizeof(device_id)), 0);
     ck_assert(config.connected);
     ck_assert_str_ne(device_id, "00066646C2AF");
 }
@@ -287,7 +287,7 @@ START_TEST (test_get_name_no_response)
 
     char name[20];
     ck_assert(!config.connected);
-    ck_assert_int_eq(at_commander_get_name(&config, name, sizeof(name)), -1);
+    ck_assert_int_eq(at_commander_get_name(&config, name, sizeof(name)), 0);
     ck_assert(config.connected);
     ck_assert_str_ne(name, "FOO");
 }

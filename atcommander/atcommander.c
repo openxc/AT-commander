@@ -4,6 +4,9 @@
 #include <string.h>
 #include <stdio.h>
 
+// TODO hard coded max of 128 - I've never seen one anywhere near this
+// long so we're probably OK.
+#define AT_COMMANDER_MAX_REQUEST_LENGTH 128
 #define AT_COMMANDER_DEFAULT_RESPONSE_DELAY_MS 200
 #define AT_COMMANDER_RETRY_DELAY_MS 100
 #define AT_COMMANDER_MAX_RESPONSE_LENGTH 8
@@ -126,13 +129,34 @@ bool check_response(AtCommanderConfig* config, const char* response,
     return false;
 }
 
+/** Private: Send an AT "get" query, read a response, and verify it doesn't match
+ * any known errors.
+ *
+ * Returns true if the response isn't a known error state.
+ */
+int get_request(AtCommanderConfig* config, AtCommand* command,
+        char* response_buffer, int response_buffer_length) {
+    at_commander_write(config, command->request_format,
+            strlen(command->request_format));
+    at_commander_delay_ms(config, config->platform.response_delay_ms);
+
+    int bytes_read = at_commander_read(config, response_buffer,
+            response_buffer_length - 1, AT_COMMANDER_MAX_RETRIES);
+    response_buffer[bytes_read] = '\0';
+
+    if(strncmp(response_buffer, command->error_response, strlen(command->error_response))) {
+        return bytes_read;
+    }
+    return -1;
+}
+
+
 /** Private: Send an AT command, read a response, and verify it matches the
  * expected value.
  *
  * Returns true if the response matches the expected.
  */
-bool set_request(AtCommanderConfig* config, const char* command,
-        const char* expected_response) {
+bool set_request(AtCommanderConfig* config, const char* command, const char* expected_response) {
     at_commander_write(config, command, strlen(command));
     at_commander_delay_ms(config, config->platform.response_delay_ms);
 
@@ -144,25 +168,69 @@ bool set_request(AtCommanderConfig* config, const char* command,
             strlen(expected_response));
 }
 
-/** Private: Send an AT GET query, read a response, and verify it doesn't match
- * any known errors.
- *
- * Returns true if the response isn't a known error state.
- */
-int get_request(AtCommanderConfig* config, const char* command,
-        const char* error_response, char* response_buffer,
-        int response_buffer_length) {
-    at_commander_write(config, command, strlen(command));
-    at_commander_delay_ms(config, config->platform.response_delay_ms);
+bool at_commander_store_settings(AtCommanderConfig* config) {
+    if(config->platform.store_settings_command.request_format != NULL
+            && config->platform.store_settings_command.expected_response
+                != NULL) {
+        if(set_request(config,
+                config->platform.store_settings_command.request_format,
+                config->platform.store_settings_command.expected_response)) {
+            at_commander_debug(config, "Stored settings into flash memory");
+            return true;
+        }
 
-    int bytes_read = at_commander_read(config, response_buffer,
-            response_buffer_length - 1, AT_COMMANDER_MAX_RETRIES);
-    response_buffer[bytes_read] = '\0';
-
-    if(strncmp(response_buffer, error_response, strlen(error_response))) {
-        return bytes_read;
+        at_commander_debug(config, "Unable to store settings in flash memory");
+        return false;
     }
-    return -1;
+    return false;
+}
+
+bool at_commander_set(AtCommanderConfig* config, AtCommand* command, ...) {
+    if(at_commander_enter_command_mode(config)) {
+        va_list args;
+        va_start(args, command->request_format);
+
+        char request[AT_COMMANDER_MAX_REQUEST_LENGTH];
+        vsnprintf(request, AT_COMMANDER_MAX_REQUEST_LENGTH, command->request_format, args);
+
+        va_end(args);
+
+        if(set_request(config, request, command->expected_response)) {
+            at_commander_debug(config, "Set request \"%s\" successful", request);
+            at_commander_store_settings(config);
+            return true;
+        } else {
+            at_commander_debug(config, "Set request unsuccessful");
+            return false;
+        }
+    } else {
+        at_commander_debug(config,
+                "Unable to enter command mode, can't make set request");
+        return false;
+    }
+}
+
+int at_commander_get(AtCommanderConfig* config, AtCommand* command,
+        char* response_buffer, int response_buffer_length) {
+    if(response_buffer == NULL || response_buffer_length <= 0) {
+        at_commander_debug(config, "Buffer for query response is invalid");
+        return -1;
+    }
+
+    int bytes_read = -1;
+    if(at_commander_enter_command_mode(config)) {
+        bytes_read = get_request(config, command, response_buffer,
+                response_buffer_length);
+        if(bytes_read > 0) {
+            at_commander_debug(config, "Query returned: %s", response_buffer);
+        } else {
+            at_commander_debug(config, "No data returned from query");
+        }
+    } else {
+        at_commander_debug(config,
+                "Unable to enter command mode, can't get device name");
+    }
+    return bytes_read;
 }
 
 /** Private: Change the baud rate of the UART interface and update the config
@@ -193,8 +261,7 @@ bool at_commander_enter_command_mode(AtCommanderConfig* config) {
 
             if(set_request(config,
                     config->platform.enter_command_mode_command.request_format,
-                    config->platform.
-                        enter_command_mode_command.expected_response)) {
+                    config->platform.enter_command_mode_command.expected_response)) {
                 config->connected = true;
                 break;
             }
@@ -248,23 +315,6 @@ bool at_commander_reboot(AtCommanderConfig* config) {
     }
 }
 
-bool at_commander_store_settings(AtCommanderConfig* config) {
-    if(config->platform.store_settings_command.request_format != NULL
-            && config->platform.store_settings_command.expected_response
-                != NULL) {
-        if(set_request(config,
-                config->platform.store_settings_command.request_format,
-                config->platform.store_settings_command.expected_response)) {
-            at_commander_debug(config, "Stored settings into flash memory");
-            return true;
-        }
-
-        at_commander_debug(config, "Unable to store settings in flash memory");
-        return false;
-    }
-    return false;
-}
-
 bool at_commander_set_configuration_timer(AtCommanderConfig* config,
         int timeout_s) {
     if(at_commander_enter_command_mode(config)) {
@@ -290,108 +340,42 @@ bool at_commander_set_configuration_timer(AtCommanderConfig* config,
 }
 
 bool at_commander_set_baud(AtCommanderConfig* config, int baud) {
-    if(at_commander_enter_command_mode(config)) {
-        char command[6];
-        int (*baud_rate_mapper)(int) = config->platform.baud_rate_mapper;
-        sprintf(command, config->platform.set_baud_rate_command.request_format,
-                baud_rate_mapper(baud));
-        /* at_commander_debug(config, "Mapping baud %d to %d", baud, */
-                /* baud_rate_mapper(baud)); */
-        if(set_request(config, command,
-                config->platform.set_baud_rate_command.expected_response)) {
-            at_commander_debug(config, "Changed device baud rate to %d", baud);
-            config->device_baud = baud;
-            at_commander_store_settings(config);
-            return true;
-        } else {
-            at_commander_debug(config, "Unable to change device baud rate");
-            return false;
-        }
+    int (*baud_rate_mapper)(int) = config->platform.baud_rate_mapper;
+    if(at_commander_set(config, &config->platform.set_baud_rate_command,
+                baud_rate_mapper(baud))) {
+        at_commander_debug(config, "Changed device baud rate to %d", baud);
+        config->device_baud = baud;
+        return true;
     } else {
-        at_commander_debug(config,
-                "Unable to enter command mode, can't set baud rate");
+        at_commander_debug(config, "Unable to change device baud rate");
         return false;
     }
 }
 
 bool at_commander_set_name(AtCommanderConfig* config, const char* name,
         bool serialized) {
-    if(at_commander_enter_command_mode(config)) {
-        AtCommand* command = &config->platform.set_name_command;
-        if(serialized) {
-            at_commander_debug(config,
-                    "Appending unique serial number to end of name");
-            command = &config->platform.set_serialized_name_command;
-        }
-
-        char request[17];
-        sprintf(request, command->request_format, name);
-        if(set_request(config, request, command->expected_response)) {
-            at_commander_debug(config, "Changed device name to %s", name);
-            at_commander_store_settings(config);
-            return true;
-        } else {
-            at_commander_debug(config, "Unable to change device name");
-            return false;
-        }
-    } else {
+    AtCommand* command = &config->platform.set_name_command;
+    if(serialized) {
         at_commander_debug(config,
-                "Unable to enter command mode, can't set device name");
-        return false;
+                "Appending unique serial number to end of name");
+        command = &config->platform.set_serialized_name_command;
+    }
+    if(at_commander_set(config, command, name)) {
+        at_commander_debug(config, "Changed device name successfully to %s",
+                name);
     }
 }
 
-// TODO this is almost identical to at_commander_get_name
 int at_commander_get_device_id(AtCommanderConfig* config, char* buffer,
         int buflen) {
-    if(buffer == NULL || buflen <= 0) {
-        at_commander_debug(config, "Unable to get device ID, buffer is invalid");
-        return -1;
-    }
-
-    if(at_commander_enter_command_mode(config)) {
-        AtCommand* command = &config->platform.get_device_id_command;
-
-        int bytes_read = get_request(config, command->request_format,
-                command->error_response, buffer, buflen);
-        if(bytes_read > 0) {
-            at_commander_debug(config, "Retrieved device ID %s", buffer);
-            return bytes_read;
-        } else {
-            at_commander_debug(config, "Unable to get device ID");
-            return -1;
-        }
-    } else {
-        at_commander_debug(config,
-                "Unable to enter command mode, can't get device ID");
-        return -1;
-    }
+    return at_commander_get(config, &config->platform.get_device_id_command,
+            buffer, buflen);
 }
 
 int at_commander_get_name(AtCommanderConfig* config, char* buffer,
         int buflen) {
-    if(buffer == NULL || buflen <= 0) {
-        at_commander_debug(config, "Unable to get name, buffer is invalid");
-        return -1;
-    }
-
-    if(at_commander_enter_command_mode(config)) {
-        AtCommand* command = &config->platform.get_name_command;
-
-        int bytes_read = get_request(config, command->request_format,
-                command->error_response, buffer, buflen);
-        if(bytes_read > 0) {
-            at_commander_debug(config, "Retrieved device name %s", buffer);
-            return bytes_read;
-        } else {
-            at_commander_debug(config, "Unable to get device name");
-            return -1;
-        }
-    } else {
-        at_commander_debug(config,
-                "Unable to enter command mode, can't get device name");
-        return -1;
-    }
+    return at_commander_get(config, &config->platform.get_name_command,
+            buffer, buflen);
 }
 
 int rn42_baud_rate_mapper(int baud) {
