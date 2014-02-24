@@ -196,11 +196,9 @@ bool at_commander_set(AtCommanderConfig* config, AtCommand* command, ...) {
         va_end(args);
 
         if(set_request(config, request, command->expected_response)) {
-            at_commander_debug(config, "Set request \"%s\" successful", request);
             at_commander_store_settings(config);
             return true;
         } else {
-            at_commander_debug(config, "Set request unsuccessful");
             return false;
         }
     } else {
@@ -221,11 +219,6 @@ int at_commander_get(AtCommanderConfig* config, AtCommand* command,
     if(at_commander_enter_command_mode(config)) {
         bytes_read = get_request(config, command, response_buffer,
                 response_buffer_length);
-        if(bytes_read > 0) {
-            at_commander_debug(config, "Query returned: %s", response_buffer);
-        } else {
-            at_commander_debug(config, "No data returned from query");
-        }
     } else {
         at_commander_debug(config,
                 "Unable to enter command mode, can't get device name");
@@ -274,8 +267,6 @@ bool at_commander_enter_command_mode(AtCommanderConfig* config) {
             at_commander_debug(config,
                     "Unable to enter command mode at any baud rate");
         }
-    } else {
-        at_commander_debug(config, "Already in command mode");
     }
     return config->connected;
 }
