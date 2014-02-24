@@ -188,7 +188,7 @@ bool at_commander_store_settings(AtCommanderConfig* config) {
 bool at_commander_set(AtCommanderConfig* config, AtCommand* command, ...) {
     if(at_commander_enter_command_mode(config)) {
         va_list args;
-        va_start(args, command->request_format);
+        va_start(args, command);
 
         char request[AT_COMMANDER_MAX_REQUEST_LENGTH];
         vsnprintf(request, AT_COMMANDER_MAX_REQUEST_LENGTH, command->request_format, args);
@@ -363,7 +363,9 @@ bool at_commander_set_name(AtCommanderConfig* config, const char* name,
     if(at_commander_set(config, command, name)) {
         at_commander_debug(config, "Changed device name successfully to %s",
                 name);
+        return true;
     }
+    return false;
 }
 
 int at_commander_get_device_id(AtCommanderConfig* config, char* buffer,

@@ -146,7 +146,7 @@ int at_commander_get_name(AtCommanderConfig* config, char* buffer,
 /** Public: Send an AT "get" query, read a response, and verify it doesn't match
  * any known errors.
  *
- * Returns true if the response isn't a known error state.
+ *  Returns the length of the response, or -1 if an error occurred.
  */
 int at_commander_get(AtCommanderConfig* config, AtCommand* command,
         char* response_buffer, int response_buffer_length);
